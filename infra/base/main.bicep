@@ -44,6 +44,10 @@ param windowsImageDefinitionName string = 'windows-agent'
 @description('Set true to use gallery image versions (they must exist). False uses marketplace images for initial bootstrap.')
 param useGalleryImages bool = false
 
+@description('Optional: Client ID of GitHub OIDC federated application (for reference/output only).')
+@maxLength(64)
+param githubOidcClientId string = ''
+
 @description('Create compute gallery (set false temporarily if subscription lacks required features).')
 param createGallery bool = true
 
@@ -397,3 +401,4 @@ output keyVaultName string = kv.name
 // Outputs
 output vmssNameOut string = vmssAdo.name
 output ghVmNameOut string = ghVm.name
+output githubOidcClientIdOut string = githubOidcClientId
