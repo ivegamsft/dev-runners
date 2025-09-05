@@ -1,0 +1,130 @@
+{
+  "variables": {
+    "runner_version": "2.317.0",
+    "runner_user": "ghrunner",
+    "location": "{{env `PACKER_LOCATION`}}",
+    "managed_image_rg": "{{env `PACKER_IMAGE_RG`}}",
+    "managed_image_name": "linux-github-runner",
+    "temp_rg": "{{env `PACKER_TEMP_RG`}}",
+    "vm_size": "{{env `PACKER_VM_SIZE`}}",
+    "base_publisher": "Canonical",
+    "base_offer": "0001-com-ubuntu-server-jammy",
+    "base_sku": "22_04-lts",
+    "tag_role": "github-runner",
+    "tag_org": "{{env `ORG`}}",
+    "tag_env": "{{env `ENV`}}",
+    "gallery_name": "{{env `GALLERY_NAME`}}",
+    "gallery_rg": "{{env `GALLERY_RG`}}",
+    "gallery_image_definition": "linux-agent",
+    "gallery_image_version": "{{env `GALLERY_VERSION`}}"
+  },
+  "builders": [
+    {
+      "type": "azure-arm",
+      "managed_image_resource_group_name": "{{user `managed_image_rg`}}",
+      "managed_image_name": "{{user `managed_image_name`}}",
+      "os_type": "Linux",
+      "image_publisher": "{{user `base_publisher`}}",
+      "image_offer": "{{user `base_offer`}}",
+      "image_sku": "{{user `base_sku`}}",
+      "vm_size": "{{user `vm_size`}}",
+      "location": "{{user `location`}}",
+      "azure_tags": {
+        "role": "{{user `tag_role`}}",
+        "org": "{{user `tag_org`}}",
+        "env": "{{user `tag_env`}}",
+        "os": "linux"
+      },
+      "temp_resource_group_name": "{{user `temp_rg`}}",
+      "shared_image_gallery_destination": {
+        "resource_group": "{{user `gallery_rg`}}",
+        "gallery_name": "{{user `gallery_name`}}",
+        "image_name": "{{user `gallery_image_definition`}}",
+        "image_version": "{{user `gallery_image_version`}}",
+        "replication_regions": ["{{user `location`}}"]
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "set -euxo pipefail",
+        "sudo apt-get update -y",
+        "sudo apt-get install -y jq git curl zip unzip tar bash libicu-dev build-essential python3 python3-pip",
+        "curl -fsSL https://aka.ms/install-azd.sh | bash",
+        "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash",
+        "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -",
+        "sudo apt-get install -y nodejs",
+        "sudo useradd -m -s /bin/bash {{user `runner_user`}} || true",
+        "sudo usermod -aG sudo {{user `runner_user`}} || true"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "set -euxo pipefail",
+        "RUNNER_VERSION={{user `runner_version`}}",
+        "cd /opt",
+        "sudo mkdir -p actions-runner && sudo chown $(whoami) actions-runner",
+        "cd actions-runner",
+        "curl -L -o actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz",
+        "tar xzf actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz",
+        "sudo chown -R {{user `runner_user`}}:{{user `runner_user`}} /opt/actions-runner",
+        "sudo bash bin/installdependencies.sh || true"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "set -euxo pipefail",
+        "cat <<'EOF' | sudo tee /opt/actions-runner/bootstrap.sh > /dev/null",
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "RUNNER_DIR=/opt/actions-runner",
+        "cd $RUNNER_DIR",
+        "# Expect: GH_SCOPE (org OR repo), GH_OWNER, optional GH_REPO, KEYVAULT_NAME, SECRET_NAME (PAT) OR GH_PAT provided",
+        "if [[ -z \"${GH_SCOPE:-}\" || -z \"${GH_OWNER:-}\" ]]; then echo 'Missing GH_SCOPE or GH_OWNER'; exit 1; fi",
+        "if [[ -n \"${KEYVAULT_NAME:-}\" && -z \"${GH_PAT:-}\" ]]; then",
+        "  MSI_TOKEN=$(curl -s -H Metadata:true \"http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net\" | jq -r .access_token)",
+        "  GH_PAT=$(curl -s -H \"Authorization: Bearer $MSI_TOKEN\" https://$KEYVAULT_NAME.vault.azure.net/secrets/$SECRET_NAME?api-version=7.4 | jq -r .value)",
+        "fi",
+        "if [[ -z \"${GH_PAT:-}\" ]]; then echo 'Missing GH_PAT (personal access token)'; exit 1; fi",
+        "API_BASE=https://api.github.com",
+        "if [[ \"$GH_SCOPE\" == 'org' ]]; then TOKEN_URL=$API_BASE/orgs/$GH_OWNER/actions/runners/registration-token; fi",
+        "if [[ \"$GH_SCOPE\" == 'repo' ]]; then TOKEN_URL=$API_BASE/repos/$GH_OWNER/$GH_REPO/actions/runners/registration-token; fi",
+        "REG_TOKEN=$(curl -s -XPOST -H 'Accept: application/vnd.github+json' -H \"Authorization: Bearer $GH_PAT\" $TOKEN_URL | jq -r .token)",
+        "if [[ -z $REG_TOKEN || $REG_TOKEN == 'null' ]]; then echo 'Failed to obtain registration token'; exit 1; fi",
+        "./config.sh --url https://github.com/$GH_OWNER${GH_REPO:+/$GH_REPO} --token $REG_TOKEN --unattended --ephemeral --replace --labels linux,x64,self-hosted",
+        "exec ./run.sh",
+        "EOF",
+        "sudo chmod +x /opt/actions-runner/bootstrap.sh",
+        "cat <<'EOF' | sudo tee /etc/systemd/system/github-runner.service > /dev/null",
+        "[Unit]",
+        "Description=GitHub Actions Runner (ephemeral)",
+        "After=network.target",
+        "[Service]",
+        "Type=simple",
+        "User={{user `runner_user`}}",
+        "WorkingDirectory=/opt/actions-runner",
+        "Environment=GH_SCOPE=org",
+        "# Set GH_OWNER, optionally GH_REPO, KEYVAULT_NAME, SECRET_NAME via cloud-init or extension before starting",
+        "ExecStart=/opt/actions-runner/bootstrap.sh",
+        "Restart=always",
+        "RestartSec=10",
+        "[Install]",
+        "WantedBy=multi-user.target",
+        "EOF",
+        "sudo systemctl daemon-reload",
+        "sudo systemctl enable github-runner.service",
+        "sudo chown -R {{user `runner_user`}}:{{user `runner_user`}} /opt/actions-runner"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "echo 'Image build complete for GitHub runner version {{user `runner_version`}}'"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+name: Deploy Base Infra (Gallery Images)
+
+on:
+  workflow_dispatch:
+    inputs:
+      enableGhPublicIp:
+        description: 'Expose public IP for GitHub runner VM (not recommended for prod)'
+        required: false
+        default: 'false'
+      linuxVmSize:
+        description: 'Linux VMSS size'
+        required: false
+        default: 'Standard_D4s_v5'
+      windowsVmSize:
+        description: 'Windows VM size (GitHub runner placeholder)'
+        required: false
+        default: 'Standard_D4s_v5'
+
+env:
+  ORG: acme
+  ENV: dev
+  LOCATION: swedencentral
+  LOC: sec
+  UNIQUE_SUFFIX: a1b2
+  RESOURCE_GROUP: rg-acme-dev-sec
+  GALLERY_NAME: galacmedevseca1b2
+  ADMIN_USERNAME: agentadmin
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Resolve Latest Gallery Versions
+        id: versions
+        shell: bash
+        run: |
+          LINUX_VER=$(az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition linux-agent --query '[-1].name' -o tsv)
+          WIN_VER=$(az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition windows-agent --query '[-1].name' -o tsv)
+          if [ -z "$LINUX_VER" ] || [ -z "$WIN_VER" ]; then
+            echo "Missing gallery versions: linux='$LINUX_VER' windows='$WIN_VER'" >&2
+            exit 1
+          fi
+          echo "linux=$LINUX_VER" >> $GITHUB_OUTPUT
+          echo "windows=$WIN_VER" >> $GITHUB_OUTPUT
+          echo "Resolved linux=$LINUX_VER windows=$WIN_VER"
+
+      - name: Create Params File
+        shell: bash
+        run: |
+          ADMIN_SSH_PUBLIC_KEY='${{ secrets.ADMIN_SSH_PUBLIC_KEY }}'
+          if [ -z "$ADMIN_SSH_PUBLIC_KEY" ]; then echo 'ADMIN_SSH_PUBLIC_KEY secret required'; exit 1; fi
+          cat > deploy-params.json <<EOF
+          {
+            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {
+              "org": { "value": "$ORG" },
+              "env": { "value": "$ENV" },
+              "location": { "value": "$LOCATION" },
+              "loc": { "value": "$LOC" },
+              "uniqueSuffix": { "value": "$UNIQUE_SUFFIX" },
+              "adminUsername": { "value": "$ADMIN_USERNAME" },
+              "adminSshPublicKey": { "value": "$ADMIN_SSH_PUBLIC_KEY" },
+              "adminPassword": { "value": "${{ secrets.ADMIN_PASSWORD }}" },
+              "linuxImageVersion": { "value": "${{ steps.versions.outputs.linux }}" },
+              "windowsImageVersion": { "value": "${{ steps.versions.outputs.windows }}" },
+              "linuxVmSize": { "value": "${{ github.event.inputs.linuxVmSize }}" },
+              "windowsVmSize": { "value": "${{ github.event.inputs.windowsVmSize }}" },
+              "enableGhPublicIp": { "value": ${{ github.event.inputs.enableGhPublicIp }} },
+              "confirmUseGallery": { "value": true }
+            }
+          }
+          EOF
+          cat deploy-params.json
+
+      - name: Deploy (Gallery)
+        run: |
+          az deployment group create \
+            -g $RESOURCE_GROUP \
+            -f infra/deploy/main.bicep \
+            -p @deploy-params.json
+
+      - name: Output VM Resources
+        run: |
+          echo 'VM Scale Set:'
+          az vmss list -g $RESOURCE_GROUP --query "[].name" -o tsv || true
+          echo 'VMs:'
+          az vm list -g $RESOURCE_GROUP --query "[].name" -o tsv || true

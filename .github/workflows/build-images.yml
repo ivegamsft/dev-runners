@@ -1,0 +1,154 @@
+name: Build and Publish Agent Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/image/**'
+      - 'infra/images/**'
+      - '.github/workflows/build-images.yml'
+
+env:
+  ORG: acme
+  ENV: dev
+  LOCATION: swedencentral
+  LOC: sec
+  UNIQUE_SUFFIX: a1b2
+  RESOURCE_GROUP: rg-acme-dev-sec
+  GALLERY_NAME: galacmedevseca1b2
+  PACKER_TEMP_RG: rg-packer-temp
+  PACKER_VM_SIZE: Standard_D4s_v5
+
+permissions:
+  id-token: write   # (optional if using SP secret auth only)
+  contents: read
+
+concurrency:
+  group: build-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Ensure Image Definitions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Create Resource Group (idempotent)
+        run: |
+          az group create -n $RESOURCE_GROUP -l $LOCATION --tags system=build-agents || true
+
+      - name: Deploy Image Definitions (idempotent)
+        run: |
+          az deployment group create \
+            -g $RESOURCE_GROUP \
+            -f infra/images/main.bicep \
+            -p org=$ORG env=$ENV loc=$LOC uniqueSuffix=$UNIQUE_SUFFIX galleryName=$GALLERY_NAME
+
+  build:
+    name: Packer Build (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: linux
+            template: scripts/image/linux-packer.json
+            definition: linux-agent
+          - image: windows
+            template: scripts/image/windows-packer.json
+            definition: windows-agent
+    env:
+      # Packer expects ARM_* env vars for azure-arm builder when not using CLI auth override
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      PACKER_LOCATION: ${{ env.LOCATION }}
+      PACKER_IMAGE_RG: ${{ env.RESOURCE_GROUP }}
+      GALLERY_RG: ${{ env.RESOURCE_GROUP }}
+      GALLERY_NAME: ${{ env.GALLERY_NAME }}
+      ORG: ${{ env.ORG }}
+      ENV: ${{ env.ENV }}
+      PACKER_VM_SIZE: ${{ env.PACKER_VM_SIZE }}
+      PACKER_TEMP_RG: ${{ env.PACKER_TEMP_RG }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v3
+        with:
+          version: 1.12.0
+
+      - name: Install Azure Packer Plugin
+        run: |
+          packer plugins install github.com/hashicorp/azure@v2.3.3
+
+      - name: Compute Unique Gallery Version
+        id: version
+        shell: bash
+        run: |
+          YEAR=$(date +'%Y')
+          MONTH=$(date +'%m' | sed 's/^0*//')
+          DAY=$(date +'%d' | sed 's/^0*//')
+          PATCH=$DAY
+          BASE="$YEAR.$MONTH.$PATCH"
+          # bump patch if version already exists for this definition
+          while az sig image-version show -g "$RESOURCE_GROUP" --gallery-name "$GALLERY_NAME" --gallery-image-definition "${{ matrix.definition }}" --gallery-image-version "$YEAR.$MONTH.$PATCH" >/dev/null 2>&1; do
+            PATCH=$((PATCH+1))
+          done
+          VERSION="$YEAR.$MONTH.$PATCH"
+          echo "GALLERY_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version $VERSION"
+
+      - name: Packer Validate
+        run: packer validate ${{ matrix.template }}
+
+      - name: Build Image (${{ matrix.image }})
+        run: |
+          packer build -only=azure-arm ${{ matrix.template }}
+
+      - name: Show Created Version
+        run: |
+          az sig image-version show -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition ${{ matrix.definition }} --gallery-image-version $GALLERY_VERSION --query "{name:name,publishDate:publishingProfile.publishedDate}" -o json || true
+
+      - name: Upload Build Metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: packer-${{ matrix.image }}-metadata
+          path: |
+            .
+          if-no-files-found: ignore
+        continue-on-error: true
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Versions Published
+        run: |
+          echo "Published versions:" > versions.txt
+          echo "(Assuming az context from previous steps; if empty, add a login step)" >> versions.txt
+          echo "Linux:" >> versions.txt
+          az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition linux-agent --query '[].name' -o tsv >> versions.txt || true
+          echo "Windows:" >> versions.txt
+          az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition windows-agent --query '[].name' -o tsv >> versions.txt || true
+          cat versions.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gallery-versions
+          path: versions.txt

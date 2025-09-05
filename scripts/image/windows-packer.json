@@ -1,0 +1,135 @@
+{
+  "variables": {
+    "location": "{{env `PACKER_LOCATION`}}",
+    "managed_image_rg": "{{env `PACKER_IMAGE_RG`}}",
+    "managed_image_name": "windows-ado-agent",
+    "temp_rg": "{{env `PACKER_TEMP_RG`}}",
+    "vm_size": "{{env `PACKER_VM_SIZE`}}",
+    "base_publisher": "MicrosoftWindowsServer",
+    "base_offer": "WindowsServer",
+    "base_sku": "2022-datacenter-azure-edition",
+    "tag_role": "ado-agent",
+    "tag_org": "{{env `ORG`}}",
+    "tag_env": "{{env `ENV`}}",
+    "agent_version": "3.240.1",
+    "agent_root": "C:\\ado-agent",
+    "agent_user": "NT AUTHORITY\\SYSTEM",
+    "gallery_name": "{{env `GALLERY_NAME`}}",
+    "gallery_rg": "{{env `GALLERY_RG`}}",
+    "gallery_image_definition": "windows-agent",
+    "gallery_image_version": "{{env `GALLERY_VERSION`}}"
+  },
+  "builders": [
+    {
+      "type": "azure-arm",
+      "managed_image_resource_group_name": "{{user `managed_image_rg`}}",
+      "managed_image_name": "{{user `managed_image_name`}}",
+      "os_type": "Windows",
+      "image_publisher": "{{user `base_publisher`}}",
+      "image_offer": "{{user `base_offer`}}",
+      "image_sku": "{{user `base_sku`}}",
+      "vm_size": "{{user `vm_size`}}",
+      "location": "{{user `location`}}",
+      "azure_tags": {
+        "role": "{{user `tag_role`}}",
+        "org": "{{user `tag_org`}}",
+        "env": "{{user `tag_env`}}",
+        "os": "windows"
+      },
+      "temp_resource_group_name": "{{user `temp_rg`}}",
+      "shared_image_gallery_destination": {
+        "resource_group": "{{user `gallery_rg`}}",
+        "gallery_name": "{{user `gallery_name`}}",
+        "image_name": "{{user `gallery_image_definition`}}",
+        "image_version": "{{user `gallery_image_version`}}",
+        "replication_regions": ["{{user `location`}}"]
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "inline": [
+        "Set-ExecutionPolicy Bypass -Force",
+        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12",
+        "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force",
+        "Install-Module -Name Az -Force -AllowClobber",
+        "Invoke-WebRequest https://aka.ms/installazd.ps1 -OutFile installazd.ps1; ./installazd.ps1",
+        "if (-not (Get-Command choco.exe -ErrorAction SilentlyContinue)) { Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = 3072; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')) }",
+        "choco install git -y",
+        "choco install nodejs-lts -y",
+        "choco install visualstudio2022buildtools -y --package-parameters '--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --passive --locale en-US'",
+        "choco install azure-cli -y",
+        "choco install cmake -y",
+        "choco install python --version=3.12.3 -y"
+      ]
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "$ErrorActionPreference='Stop'",
+        "$agentVersion='{{user `agent_version`}}'",
+        "$agentRoot='{{user `agent_root`}}'",
+        "New-Item -ItemType Directory -Force -Path $agentRoot | Out-Null",
+        "Invoke-WebRequest -UseBasicParsing -Uri https://vstsagentpackage.azureedge.net/agent/$agentVersion/vsts-agent-win-x64-$agentVersion.zip -OutFile agent.zip",
+        "Expand-Archive agent.zip -DestinationPath $agentRoot -Force",
+        "Remove-Item agent.zip -Force",
+        "# Pre-cache some common npm/pip tools (optional, quick)",
+        "npm install --location=global yarn pnpm || Write-Host 'npm tool layer'",
+        "pip install --upgrade pip virtualenv || Write-Host 'pip upgrade'",
+        "Set-Content -Path $agentRoot\\configure-run.ps1 -Value (@'",
+        "param(",
+        "  [string]$OrgUrl,",
+        "  [string]$PoolName='Default',",
+        "  [string]$AgentName=$env:COMPUTERNAME,",
+        "  [string]$WorkFolder='c:/ado/_work',",
+        "  [string]$AuthType='pat',",
+        "  [string]$Token='',",
+        "  [string]$Replace='true'",
+        ")",
+        "if(-not $OrgUrl){ Write-Error 'OrgUrl required'; exit 1 }",
+        "if(-not $Token){ Write-Error 'Token required (PAT or managed identity injection path TBD)'; exit 1 }",
+        "$configArgs = @('--unattended','--url',$OrgUrl,'--pool',$PoolName,'--agent',$AgentName,'--work',$WorkFolder,'--replace')",
+        "if($AuthType -eq 'pat'){ $configArgs += @('--auth','pat','--token',$Token) }",
+        "if(!(Test-Path $WorkFolder)){ New-Item -ItemType Directory -Force -Path $WorkFolder | Out-Null }",
+        "& $agentRoot\\config.cmd $configArgs",
+        "& $agentRoot\\run.cmd",
+        "'@)"
+      ]
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "$ErrorActionPreference='Stop'",
+        "$agentRoot='{{user `agent_root`}}'",
+        "# Managed identity bootstrap + service creation scripts",
+        "Set-Content -Path $agentRoot\\bootstrap-agent.ps1 -Value (@'",
+        "$ErrorActionPreference='Stop'",
+        "function Get-KeyVaultSecret { param([string]$Vault,[string]$Name) $resource='https://vault.azure.net'; $t=Invoke-RestMethod -Headers @{Metadata='true'} -Uri \"http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=$resource\"; if(-not $t.access_token){ throw 'MI token failed'}; (Invoke-RestMethod -Headers @{Authorization=\"Bearer $($t.access_token)\"} -Uri \"https://$Vault.vault.azure.net/secrets/$Name?api-version=7.4\").value }",
+        "$env:ADO_POOL = if([string]::IsNullOrWhiteSpace($env:ADO_POOL)) { 'Default' } else { $env:ADO_POOL }",
+        "if([string]::IsNullOrWhiteSpace($env:ADO_ORG_URL)){ Write-Error 'ADO_ORG_URL env var required'; exit 1 }",
+        "if([string]::IsNullOrWhiteSpace($env:KEYVAULT_NAME)){ Write-Error 'KEYVAULT_NAME env var required'; exit 1 }",
+        "$secretName = if([string]::IsNullOrWhiteSpace($env:ADO_PAT_SECRET)) { 'ado-pat' } else { $env:ADO_PAT_SECRET }",
+        "$pat = Get-KeyVaultSecret -Vault $env:KEYVAULT_NAME -Name $secretName",
+        "if([string]::IsNullOrWhiteSpace($pat)){ Write-Error 'Failed to retrieve PAT secret'; exit 1 }",
+        "Set-Location $agentRoot",
+        "if(-not (Test-Path .agent)){ & .\\config.cmd --unattended --url $env:ADO_ORG_URL --pool $env:ADO_POOL --agent $env:COMPUTERNAME --auth pat --token $pat --runAsService --replace --work c:/ado/_work }",
+        "if(-not (Get-Service -Name vstsagent* -ErrorAction SilentlyContinue)){ & .\\run.cmd }",
+        "'@)",
+        "Set-Content -Path C:\\ado-service-setup.ps1 -Value (@'",
+        "$svcName='AdoBootstrap'",
+        "$script= 'powershell -NoLogo -ExecutionPolicy Bypass -File {{user `agent_root`}}\\bootstrap-agent.ps1'",
+        "if(!(Get-Service -Name $svcName -ErrorAction SilentlyContinue)){ New-Service -Name $svcName -BinaryPathName $script -DisplayName 'ADO Agent Bootstrap' -StartupType Automatic }",
+        "Start-Service -Name $svcName",
+        "'@)",
+        "Write-Host 'Bootstrap & service scripts created (AdoBootstrap service installed and started).'"
+      ]
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "Write-Host 'Azure DevOps agent image provisioning complete.'"
+      ]
+    }
+  ]
+}

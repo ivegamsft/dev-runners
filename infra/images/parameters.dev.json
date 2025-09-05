@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "org": { "value": "acme" },
+    "env": { "value": "dev" },
+    "location": { "value": "swedencentral" },
+    "loc": { "value": "sec" },
+    "uniqueSuffix": { "value": "a1b2" },
+    "galleryName": { "value": "galacmedevseca1b2" },
+    "linuxImageDefinitionName": { "value": "linux-agent" },
+    "windowsImageDefinitionName": { "value": "windows-agent" }
+  }
+}

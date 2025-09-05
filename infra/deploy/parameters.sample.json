@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "org": { "value": "acme" },
+    "env": { "value": "dev" },
+    "location": { "value": "swedencentral" },
+    "loc": { "value": "sec" },
+    "uniqueSuffix": { "value": "a1b2" },
+
+    "adminUsername": { "value": "azureadmin" },
+    "adminSshPublicKey": { "value": "ssh-ed25519 AAAA...yourkey" },
+    "adminPassword": { "value": "REPLACE-SECURE-PASSWORD" },
+
+    "linuxImageVersion": { "value": "2025.09.05.1" },
+    "windowsImageVersion": { "value": "2025.09.05.1" },
+
+    "linuxVmSize": { "value": "Standard_D4s_v5" },
+    "windowsVmSize": { "value": "Standard_D4s_v5" },
+    "enableGhPublicIp": { "value": false },
+    "confirmUseGallery": { "value": true }
+  }
+}

@@ -1,0 +1,16 @@
+# General
+*.log
+*.tmp
+
+# Packer output
+packer_cache/
+output-*/
+
+# Azure artifacts
+*.azcli
+
+# VS Code
+.vscode/
+
+# Node
+node_modules/
