@@ -1,0 +1,74 @@
+name: Security Infra Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+    paths:
+      - 'infra/**/*.bicep'
+      - 'scripts/**/*.ps1'
+      - '.github/workflows/security-infra.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  bicep-lint:
+    name: Bicep Build Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Bicep CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL -o bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x bicep
+          sudo mv bicep /usr/local/bin/bicep
+
+      - name: Validate Bicep Templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find infra -name "*.bicep" -type f)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No bicep files found."
+            exit 0
+          fi
+
+          for file in "${files[@]}"; do
+            echo "Validating $file"
+            bicep build --file "$file" >/dev/null
+          done
+
+  powershell-lint:
+    name: PowerShell Script Analyzer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+
+          $scripts = Get-ChildItem -Path scripts -Filter *.ps1 -Recurse | Select-Object -ExpandProperty FullName
+          if (-not $scripts -or $scripts.Count -eq 0) {
+            Write-Host 'No PowerShell scripts found.'
+            exit 0
+          }
+
+          $results = Invoke-ScriptAnalyzer -Path $scripts -Severity Error,Warning
+          if ($results) {
+            $results | Format-Table RuleName, Severity, ScriptName, Line, Message -AutoSize | Out-String | Write-Host
+            throw "PSScriptAnalyzer found $($results.Count) issues."
+          }
+
+          Write-Host 'PSScriptAnalyzer found no issues.'
