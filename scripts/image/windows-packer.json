@@ -12,6 +12,7 @@
     "tag_org": "{{env `ORG`}}",
     "tag_env": "{{env `ENV`}}",
     "agent_version": "3.240.1",
+    "agent_sha256": "PLACEHOLDER_WINDOWS_SHA256",
     "agent_root": "C:\\ado-agent",
     "agent_user": "NT AUTHORITY\\SYSTEM",
     "gallery_name": "{{env `GALLERY_NAME`}}",
@@ -72,6 +73,10 @@
         "$agentRoot='{{user `agent_root`}}'",
         "New-Item -ItemType Directory -Force -Path $agentRoot | Out-Null",
         "Invoke-WebRequest -UseBasicParsing -Uri https://vstsagentpackage.azureedge.net/agent/$agentVersion/vsts-agent-win-x64-$agentVersion.zip -OutFile agent.zip",
+        "$expected='{{user `agent_sha256`}}'",
+        "$actual=(Get-FileHash agent.zip -Algorithm SHA256).Hash.ToLower()",
+        "if ($actual -ne $expected) { throw \"Checksum mismatch for agent.zip: expected=$expected actual=$actual\" }",
+        "Write-Host \"Checksum verified: $actual\"",
         "Expand-Archive agent.zip -DestinationPath $agentRoot -Force",
         "Remove-Item agent.zip -Force",
         "# Pre-cache some common npm/pip tools (optional, quick)",
@@ -123,6 +128,17 @@
         "Start-Service -Name $svcName",
         "'@)",
         "Write-Host 'Bootstrap & service scripts created (AdoBootstrap service installed and started).'"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "scripts/image/cis-check-windows.ps1",
+      "destination": "C:\\Windows\\Temp\\cis-check-windows.ps1"
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "pwsh -File C:\\Windows\\Temp\\cis-check-windows.ps1 -ReportFile C:\\Windows\\Temp\\cis-report-windows.json"
       ]
     },
     {
