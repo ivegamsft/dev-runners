@@ -68,16 +68,16 @@ Assert-Test `
   (-not ($buildEnvBlock -match '\$\{\{\s*env\.')) `
   'Found ${{ env.* }} reference in build job env block — invalid context'
 
-# Positive: build job env block has explicit literal values
+# Positive: build job loads PACKER_LOCATION and GALLERY_NAME from env config
 Assert-Test `
-  'Build job env has PACKER_LOCATION as literal' `
-  ($buildEnvBlock -match 'PACKER_LOCATION:\s*\S') `
-  'PACKER_LOCATION not found or empty in build job env'
+  'Build job sets PACKER_LOCATION via env config load step' `
+  ($buildJobSection -match 'PACKER_LOCATION=.*jq.*LOCATION.*env/dev\.json') `
+  'PACKER_LOCATION not loaded from env/dev.json in build job'
 
 Assert-Test `
-  'Build job env has GALLERY_NAME as literal' `
-  ($buildEnvBlock -match 'GALLERY_NAME:\s*\S') `
-  'GALLERY_NAME not found in build job env'
+  'Build job loads GALLERY_NAME from env config' `
+  ($buildJobSection -match 'jq.*to_entries.*env/dev\.json.*GITHUB_ENV') `
+  'GALLERY_NAME not loaded from env/dev.json (via jq to_entries) in build job'
 
 # ─── Issue #7: No printing of params with adminPassword ─────────────────────
 Write-Host "`n=== Issue #7: No printing secret-bearing params ===" -ForegroundColor Cyan

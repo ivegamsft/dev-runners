@@ -16,14 +16,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  ORG: acme
-  ENV: dev
-  LOCATION: swedencentral
-  LOC: sec
-  UNIQUE_SUFFIX: a1b2
-  RESOURCE_GROUP: rg-acme-dev-sec
-
 jobs:
   deploy:
     name: Deploy Base Infra
@@ -31,6 +23,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Load environment config
+        shell: bash
+        run: |
+          jq -r 'to_entries[] | "\(.key)=\(.value)"' env/dev.json >> $GITHUB_ENV
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
@@ -47,14 +44,29 @@ jobs:
         run: |
           echo "ORG=$ORG ENV=$ENV LOC=$LOC UNIQUE_SUFFIX=$UNIQUE_SUFFIX" | sed 's/\r//' 
 
+      - name: Resolve Admin Password
+        id: admin_password
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${{ secrets.ADMIN_PASSWORD }}" ]; then
+            PW='${{ secrets.ADMIN_PASSWORD }}'
+          else
+            # Generate a strong bootstrap password when no override secret is provided.
+            PW="$(openssl rand -base64 36 | tr -d '=+/\n' | cut -c1-24)Aa1!"
+          fi
+
+          echo "::add-mask::$PW"
+          echo "value=$PW" >> $GITHUB_OUTPUT
+
       - name: Deploy Base (what-if)
         run: |
           az deployment group what-if \
             -g "$RESOURCE_GROUP" \
             -f infra/base/main.bicep \
             -p org=$ORG env=$ENV location=$LOCATION loc=$LOC uniqueSuffix=$UNIQUE_SUFFIX \
-               adminUsername=agentadmin adminSshPublicKey='${{ secrets.ADMIN_SSH_PUBLIC_KEY }}' \
-               adminPassword='${{ secrets.ADMIN_PASSWORD }}' \
+               adminUsername=$ADMIN_USERNAME adminSshPublicKey='${{ secrets.ADMIN_SSH_PUBLIC_KEY }}' \
+               adminPassword='${{ steps.admin_password.outputs.value }}' \
                useGalleryImages=${{ github.event.inputs.useGalleryImages || 'false' }} \
                enableGhPublicIp=${{ github.event.inputs.enableGhPublicIp || 'false' }} \
                githubOidcClientId='${{ secrets.AZURE_CLIENT_ID }}'
@@ -66,8 +78,8 @@ jobs:
             -g "$RESOURCE_GROUP" \
             -f infra/base/main.bicep \
             -p org=$ORG env=$ENV location=$LOCATION loc=$LOC uniqueSuffix=$UNIQUE_SUFFIX \
-               adminUsername=agentadmin adminSshPublicKey='${{ secrets.ADMIN_SSH_PUBLIC_KEY }}' \
-               adminPassword='${{ secrets.ADMIN_PASSWORD }}' \
+               adminUsername=$ADMIN_USERNAME adminSshPublicKey='${{ secrets.ADMIN_SSH_PUBLIC_KEY }}' \
+               adminPassword='${{ steps.admin_password.outputs.value }}' \
                useGalleryImages=${{ github.event.inputs.useGalleryImages || 'false' }} \
                enableGhPublicIp=${{ github.event.inputs.enableGhPublicIp || 'false' }} \
                githubOidcClientId='${{ secrets.AZURE_CLIENT_ID }}'
@@ -80,7 +92,7 @@ jobs:
       - name: Mask Sensitive Values
         if: always()
         run: |
-          echo "::add-mask::${{ secrets.ADMIN_PASSWORD }}"
+          echo "::add-mask::${{ steps.admin_password.outputs.value }}"
 
       - name: Post Summary
         run: |

@@ -16,16 +16,6 @@ on:
         required: false
         default: 'Standard_D4s_v5'
 
-env:
-  ORG: acme
-  ENV: dev
-  LOCATION: swedencentral
-  LOC: sec
-  UNIQUE_SUFFIX: a1b2
-  RESOURCE_GROUP: rg-acme-dev-sec
-  GALLERY_NAME: galacmedevseca1b2
-  ADMIN_USERNAME: agentadmin
-
 permissions:
   id-token: write
   contents: read
@@ -36,6 +26,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Load environment config
+        shell: bash
+        run: |
+          jq -r 'to_entries[] | "\(.key)=\(.value)"' env/dev.json >> $GITHUB_ENV
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2

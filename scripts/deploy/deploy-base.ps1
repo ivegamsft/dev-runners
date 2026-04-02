@@ -1,10 +1,21 @@
 param(
-  [string]$SubscriptionId = '844eabcc-dc96-453b-8d45-bef3d566f3f8',
-  [string]$ResourceGroup = 'rg-acme-dev-sec',
-  [string]$Location = 'swedencentral',
+  [string]$EnvConfig,
+  [string]$SubscriptionId,
+  [string]$ResourceGroup,
+  [string]$Location,
   [string]$ParametersFile = '..\..\infra\base\parameters.dev.json',
   [switch]$WhatIf
 )
+
+# Load defaults from env config if parameters not explicitly provided
+if (-not $EnvConfig) {
+  $EnvConfig = Join-Path $PSScriptRoot '..\..\env\dev.json'
+}
+if (Test-Path $EnvConfig) {
+  $envCfg = Get-Content $EnvConfig -Raw | ConvertFrom-Json
+  if (-not $ResourceGroup) { $ResourceGroup = $envCfg.RESOURCE_GROUP }
+  if (-not $Location) { $Location = $envCfg.LOCATION }
+}
 
 # Resolve paths relative to script root for reliability regardless of current working directory
 if (-not [System.IO.Path]::IsPathRooted($ParametersFile)) {

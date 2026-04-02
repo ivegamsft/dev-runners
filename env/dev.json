@@ -1,0 +1,12 @@
+{
+  "ORG": "acme",
+  "ENV": "dev",
+  "LOCATION": "swedencentral",
+  "LOC": "sec",
+  "UNIQUE_SUFFIX": "a1b2",
+  "RESOURCE_GROUP": "rg-acme-dev-sec",
+  "GALLERY_NAME": "galacmedevseca1b2",
+  "PACKER_TEMP_RG": "rg-packer-temp",
+  "PACKER_VM_SIZE": "Standard_D4s_v5",
+  "ADMIN_USERNAME": "agentadmin"
+}
