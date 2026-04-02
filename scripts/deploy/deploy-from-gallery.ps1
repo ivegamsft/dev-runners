@@ -15,6 +15,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$TemplateFile = Join-Path $PSScriptRoot '..\..\infra\deploy\main.bicep'
+if (-not (Test-Path $TemplateFile)) {
+  throw "Template file not found: $TemplateFile"
+}
+
 if (-not $GalleryName) { $GalleryName = ("gal{0}{1}{2}{3}" -f $Org,$Env,$Loc,$UniqueSuffix).ToLower() }
 
 Write-Host "Resolving latest gallery versions in '$GalleryName'..." -ForegroundColor Cyan
@@ -29,32 +34,41 @@ $tempParamFile = Join-Path $env:TEMP ("deploy-gallery-{0}.json" -f ([guid]::NewG
 
 if (-not $AdminPassword) { throw 'AdminPassword is required' }
 $plainPw = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($AdminPassword))
+try {
+  $paramObject = @{
+    "$schema" = "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#"
+    contentVersion = "1.0.0.0"
+    parameters = @{
+      org = @{ value = $Org }
+      env = @{ value = $Env }
+      location = @{ value = $Location }
+      loc = @{ value = $Loc }
+      uniqueSuffix = @{ value = $UniqueSuffix }
+      adminUsername = @{ value = $AdminUsername }
+      adminSshPublicKey = @{ value = $AdminSshPublicKey }
+      adminPassword = @{ value = $plainPw }
+      linuxImageVersion = @{ value = $linuxVer }
+      windowsImageVersion = @{ value = $winVer }
+      linuxVmSize = @{ value = 'Standard_D4s_v5' }
+      windowsVmSize = @{ value = 'Standard_D4s_v5' }
+      enableGhPublicIp = @{ value = $false }
+      confirmUseGallery = @{ value = $true }
+    }
+  } | ConvertTo-Json -Depth 8
 
-$paramObject = @{
-  "$schema" = "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#"
-  contentVersion = "1.0.0.0"
-  parameters = @{
-    org = @{ value = $Org }
-    env = @{ value = $Env }
-    location = @{ value = $Location }
-    loc = @{ value = $Loc }
-    uniqueSuffix = @{ value = $UniqueSuffix }
-    adminUsername = @{ value = $AdminUsername }
-    adminSshPublicKey = @{ value = $AdminSshPublicKey }
-  adminPassword = @{ value = $plainPw }
-    linuxImageVersion = @{ value = $linuxVer }
-    windowsImageVersion = @{ value = $winVer }
-    linuxVmSize = @{ value = 'Standard_D4s_v5' }
-    windowsVmSize = @{ value = 'Standard_D4s_v5' }
-    enableGhPublicIp = @{ value = $false }
-    confirmUseGallery = @{ value = $true }
+  $paramObject | Out-File -FilePath $tempParamFile -Encoding utf8
+  Write-Host "Parameters written: $tempParamFile" -ForegroundColor Yellow
+
+  Write-Host "Starting deployment (gallery versions linux=$linuxVer windows=$winVer)" -ForegroundColor Green
+  az deployment group create -g $ResourceGroup -f $TemplateFile -p @$tempParamFile
+
+  Write-Host "Deployment complete." -ForegroundColor Green
+}
+finally {
+  if (Test-Path $tempParamFile) {
+    Remove-Item $tempParamFile -Force -ErrorAction SilentlyContinue
   }
-} | ConvertTo-Json -Depth 8
 
-$paramObject | Out-File -FilePath $tempParamFile -Encoding utf8
-Write-Host "Parameters written: $tempParamFile" -ForegroundColor Yellow
-
-Write-Host "Starting deployment (gallery versions linux=$linuxVer windows=$winVer)" -ForegroundColor Green
-az deployment group create -g $ResourceGroup -f "infra/deploy/main.bicep" -p @$tempParamFile
-
-Write-Host "Deployment complete." -ForegroundColor Green
+  $plainPw = $null
+  [System.GC]::Collect()
+}

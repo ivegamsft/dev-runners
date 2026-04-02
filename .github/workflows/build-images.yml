@@ -72,17 +72,24 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      PACKER_LOCATION: ${{ env.LOCATION }}
-      PACKER_IMAGE_RG: ${{ env.RESOURCE_GROUP }}
-      GALLERY_RG: ${{ env.RESOURCE_GROUP }}
-      GALLERY_NAME: ${{ env.GALLERY_NAME }}
-      ORG: ${{ env.ORG }}
-      ENV: ${{ env.ENV }}
-      PACKER_VM_SIZE: ${{ env.PACKER_VM_SIZE }}
-      PACKER_TEMP_RG: ${{ env.PACKER_TEMP_RG }}
+      PACKER_LOCATION: swedencentral
+      PACKER_IMAGE_RG: rg-acme-dev-sec
+      GALLERY_RG: rg-acme-dev-sec
+      GALLERY_NAME: galacmedevseca1b2
+      ORG: acme
+      ENV: dev
+      PACKER_VM_SIZE: Standard_D4s_v5
+      PACKER_TEMP_RG: rg-packer-temp
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Install Packer
         uses: hashicorp/setup-packer@v3

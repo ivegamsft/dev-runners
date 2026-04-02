@@ -58,6 +58,34 @@ jobs:
           echo "windows=$WIN_VER" >> $GITHUB_OUTPUT
           echo "Resolved linux=$LINUX_VER windows=$WIN_VER"
 
+      - name: Resolve Admin Password
+        id: admin_password
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          KV_NAME=$(az keyvault list -g "$RESOURCE_GROUP" --query '[0].name' -o tsv)
+          if [ -z "$KV_NAME" ]; then
+            echo "No Key Vault found in $RESOURCE_GROUP" >&2
+            exit 1
+          fi
+
+          if [ -n "${{ secrets.ADMIN_PASSWORD }}" ]; then
+            PW='${{ secrets.ADMIN_PASSWORD }}'
+          else
+            EXISTING=$(az keyvault secret show --vault-name "$KV_NAME" --name admin-password --query value -o tsv 2>/dev/null || true)
+            if [ -n "$EXISTING" ]; then
+              PW="$EXISTING"
+            else
+              PW="$(openssl rand -base64 36 | tr -d '=+/\n' | cut -c1-24)Aa1!"
+              az keyvault secret set --vault-name "$KV_NAME" --name admin-password --value "$PW" --output none
+            fi
+          fi
+
+          echo "::add-mask::$PW"
+          echo "value=$PW" >> $GITHUB_OUTPUT
+          echo "keyVault=$KV_NAME" >> $GITHUB_OUTPUT
+
       - name: Create Params File
         shell: bash
         run: |
@@ -75,7 +103,7 @@ jobs:
               "uniqueSuffix": { "value": "$UNIQUE_SUFFIX" },
               "adminUsername": { "value": "$ADMIN_USERNAME" },
               "adminSshPublicKey": { "value": "$ADMIN_SSH_PUBLIC_KEY" },
-              "adminPassword": { "value": "${{ secrets.ADMIN_PASSWORD }}" },
+              "adminPassword": { "value": "${{ steps.admin_password.outputs.value }}" },
               "linuxImageVersion": { "value": "${{ steps.versions.outputs.linux }}" },
               "windowsImageVersion": { "value": "${{ steps.versions.outputs.windows }}" },
               "linuxVmSize": { "value": "${{ github.event.inputs.linuxVmSize }}" },
@@ -85,7 +113,6 @@ jobs:
             }
           }
           EOF
-          cat deploy-params.json
 
       - name: Deploy (Gallery)
         run: |

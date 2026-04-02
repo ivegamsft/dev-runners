@@ -1,7 +1,6 @@
 param(
   [string]$SubscriptionId = '844eabcc-dc96-453b-8d45-bef3d566f3f8',
   [string]$ResourceGroup = 'rg-acme-dev-sec',
-  [string]$Location = 'swedencentral',
   [string]$ParametersFile = '..\..\infra\images\parameters.dev.json',
   [switch]$WhatIf
 )
