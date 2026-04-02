@@ -174,7 +174,7 @@ if ($SkipAzure) {
       $vmss = az vmss list -g $ResourceGroup --query '[0]' -o json 2>$null | ConvertFrom-Json
       Assert-Check 'Linux VMSS deployed' ($null -ne $vmss) 'No VM Scale Set found'
 
-      $vm = az vm list -g $ResourceGroup --query "[?contains(name,'-gh-')]|[0]" -o json 2>$null | ConvertFrom-Json
+      $vm = az vm list -g $ResourceGroup -o json 2>$null | ConvertFrom-Json | Where-Object { $_.name -match '-gh-' } | Select-Object -First 1
       Assert-Check 'GitHub runner VM deployed' ($null -ne $vm) 'No GitHub runner VM found'
 
       Write-Section 'Azure: NSG'

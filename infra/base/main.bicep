@@ -117,16 +117,12 @@ resource kvSecretAdminUsername 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
   }
 }
 
-resource gallery 'Microsoft.Compute/galleries@2025-03-03' = if (createGallery) {
+resource gallery 'Microsoft.Compute/galleries@2022-08-03' = if (createGallery) {
   name: galleryName
   location: location
   tags: standardTags
   properties: {
     description: 'Compute Gallery for build agent images.'
-    sharingProfile: {
-      permissions: 'Private'
-    }
-    // Replication/target regions handled at image version level
   }
 }
 

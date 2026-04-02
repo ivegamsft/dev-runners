@@ -99,8 +99,8 @@
     },
     {
       "path": "scripts\\verify-environment.ps1",
-      "sizeBytes": 9122,
-      "sha256": "9e9462fe6be355dc732ac744c89f11a3c0d8a6f11ed2ff56ec80aa318f820d6a"
+      "sizeBytes": 9149,
+      "sha256": "f4bda7f9ee67f1c8d7b4289a475160d739667b35ca3b996d6fe95eb129d6aa74"
     }
   ],
   "copilotAgents": [
