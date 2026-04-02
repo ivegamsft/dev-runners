@@ -14,11 +14,11 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 function Invoke-AzCli {
-  param([string[]]$Args)
+  param([string[]]$CliArgs)
 
-  $output = & az @Args
+  $output = & az @CliArgs
   if ($LASTEXITCODE -ne 0) {
-    throw "az command failed: az $($Args -join ' ')"
+    throw "az command failed: az $($CliArgs -join ' ')"
   }
 
   $output
@@ -61,7 +61,7 @@ function New-StrongPassword {
 }
 
 if ($SubscriptionId) {
-  Invoke-AzCli -Args @('account', 'set', '--subscription', $SubscriptionId) | Out-Null
+  Invoke-AzCli -CliArgs @('account', 'set', '--subscription', $SubscriptionId) | Out-Null
 }
 
 if (-not [System.IO.Path]::IsPathRooted($ParametersFile)) {
@@ -82,7 +82,7 @@ if (-not $KeyVaultName) {
       throw 'Provide -KeyVaultName directly, provide -ResourceGroup for discovery, or keep a valid parameters file for name inference.'
     }
 
-    $KeyVaultName = Invoke-AzCli -Args @('keyvault', 'list', '-g', $ResourceGroup, '--query', '[0].name', '-o', 'tsv')
+    $KeyVaultName = Invoke-AzCli -CliArgs @('keyvault', 'list', '-g', $ResourceGroup, '--query', '[0].name', '-o', 'tsv')
     if (-not $KeyVaultName) {
       throw "No Key Vault found in resource group '$ResourceGroup'."
     }
@@ -102,7 +102,7 @@ if ($existing -and -not $ForceRotate) {
 }
 
 $password = if ($Password) { $Password } else { New-StrongPassword -PasswordLength $Length }
-Invoke-AzCli -Args @('keyvault', 'secret', 'set', '--vault-name', $KeyVaultName, '--name', $SecretName, '--value', $password, '--output', 'none') | Out-Null
+Invoke-AzCli -CliArgs @('keyvault', 'secret', 'set', '--vault-name', $KeyVaultName, '--name', $SecretName, '--value', $password, '--output', 'none') | Out-Null
 
 $verify = & az keyvault secret show --vault-name $KeyVaultName --name $SecretName --query id -o tsv 2>$null
 if (-not $verify) {

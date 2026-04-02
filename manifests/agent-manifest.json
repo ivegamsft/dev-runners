@@ -3,6 +3,16 @@
   "description": "Version-controlled inventory of scripts, Copilot custom agents, and runner image provisioning hints.",
   "scripts": [
     {
+      "path": "scripts\\bootstrap.ps1",
+      "sizeBytes": 12964,
+      "sha256": "a8e58dc94a662dadcb27861fbc0645de1f5883d1f2a14d03caa3b3df4a352575"
+    },
+    {
+      "path": "scripts\\cleanup.ps1",
+      "sizeBytes": 9012,
+      "sha256": "a638e11acd6da5e67cbbd7e861084642009f5a02dac7eda4f7554b4b689698b3"
+    },
+    {
       "path": "scripts\\deploy\\deploy-base.ps1",
       "sizeBytes": 1733,
       "sha256": "07a998559e932abcda74fb7a225b4c3b03dfb0045880b9020fdadbd065e3bc62"
@@ -24,23 +34,23 @@
     },
     {
       "path": "scripts\\identity\\check-secret-expiry.ps1",
-      "sizeBytes": 2153,
-      "sha256": "5a050b9fa3de0490e17d205514c7b282e9298ba705ae7fc162b44c3db81637d1"
+      "sizeBytes": 2137,
+      "sha256": "dc9edb5cc6de2ad5ef3f295bd14b6460db26a28a38a553cc3e6835eca057d197"
     },
     {
       "path": "scripts\\identity\\configure-branch-protection.ps1",
-      "sizeBytes": 3322,
-      "sha256": "071a01c2d35137997cbf06c085f518c35981afce529281701834d336876c5443"
+      "sizeBytes": 3312,
+      "sha256": "ddfac11ee98f918cd25c809a39f92c9a88ba8d13e96a65270579ca1bff20c49a"
     },
     {
       "path": "scripts\\identity\\set-admin-password.ps1",
-      "sizeBytes": 3980,
-      "sha256": "deaf90cc404ae226621d82ca23bb3560f01c0452e91c96800eb124026174185e"
+      "sizeBytes": 3998,
+      "sha256": "984aaeac2569d54edcba102bd6fe1d7f168b663f52a550b0077521fb2a7de11a"
     },
     {
       "path": "scripts\\identity\\setup-github-oidc.ps1",
-      "sizeBytes": 4760,
-      "sha256": "ed530d58889e13572524385f31bc70a2ee896d14cf237981583462d8b1fbbc6c"
+      "sizeBytes": 4773,
+      "sha256": "e9e9a24e2130fbe6599881ace7b224e9f80f945580f2624f0c747e40774a141f"
     },
     {
       "path": "scripts\\image\\checksums.json",
@@ -86,6 +96,11 @@
       "path": "scripts\\validate\\validate-base.ps1",
       "sizeBytes": 3286,
       "sha256": "89ecebeccd61d61659b072824101051ff9491590e696c6763a9e71ea2d83497d"
+    },
+    {
+      "path": "scripts\\verify-environment.ps1",
+      "sizeBytes": 9120,
+      "sha256": "1bab82dc7ce198dec03ce9b8bf730aec5351daefa22ac836bd2030783aca2e99"
     }
   ],
   "copilotAgents": [

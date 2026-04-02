@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
   Checks Key Vault secrets for approaching expiry or staleness.
-  
+
 .DESCRIPTION
   Queries secrets in the Key Vault and reports those older than the threshold.
   Returns JSON with findings and exits non-zero if any secrets need rotation.
-  
+
 .PARAMETER KeyVaultName
   Name of the Key Vault to check.
-  
+
 .PARAMETER MaxAgeDays
   Maximum acceptable age in days before flagging for rotation (default: 90).
-  
+
 .PARAMETER SecretNames
   Names of secrets to check (default: admin-password, ado-pat).
 #>
@@ -33,10 +33,10 @@ foreach ($name in $SecretNames) {
       $needsRotation = $true
       continue
     }
-    
+
     $updated = [datetime]$secret.attributes.updated
     $ageDays = [math]::Floor(([datetime]::UtcNow - $updated).TotalDays)
-    
+
     if ($ageDays -gt $MaxAgeDays) {
       $findings += @{ name = $name; status = 'STALE'; message = "Secret is $ageDays days old (max: $MaxAgeDays)"; ageDays = $ageDays }
       $needsRotation = $true

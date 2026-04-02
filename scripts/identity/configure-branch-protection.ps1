@@ -1,19 +1,19 @@
 <#
 .SYNOPSIS
   Configures branch protection rules for the main branch using GitHub CLI.
-  
+
 .DESCRIPTION
   Requires: gh CLI authenticated with admin access to the repository.
-  
+
 .PARAMETER Owner
   Repository owner (org or user).
-  
+
 .PARAMETER Repo
   Repository name.
-  
+
 .PARAMETER Branch
   Branch to protect (default: main).
-  
+
 .PARAMETER WhatIf
   Preview changes without applying.
 #>

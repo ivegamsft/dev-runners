@@ -1,4 +1,4 @@
-<#!
+<#
 .SYNOPSIS
 Creates or updates an Entra ID application & federated credential for GitHub Actions OIDC.
 
@@ -41,9 +41,9 @@ Array of Azure built-in role names to assign at scope.
 .OUTPUTS
 JSON with appId, objectId, federatedCredentialName.
 
-Example:
+.EXAMPLE
   ./setup-github-oidc.ps1 -DisplayName gh-oidc-acme-dev -GitHubOrg ivegamsft -GitHubRepo dev-runners -Branch main -ResourceGroup rg-acme-dev-sec -Roles Contributor
-#!>
+#>
 param(
   [Parameter(Mandatory)][string]$DisplayName,
   [Parameter(Mandatory)][string]$GitHubOrg,
@@ -63,13 +63,13 @@ function Write-Info($m){ Write-Host $m -ForegroundColor Cyan }
 function Write-Warn($m){ Write-Host $m -ForegroundColor Yellow }
 
 Write-Info 'Resolving existing application...'
-$matches = az ad app list --display-name $DisplayName -o json | ConvertFrom-Json
-if ($matches.Count -gt 1) {
+$appMatches = az ad app list --display-name $DisplayName -o json | ConvertFrom-Json
+if ($appMatches.Count -gt 1) {
   Write-Host "ERROR: Multiple applications match display name '$DisplayName':" -ForegroundColor Red
-  $matches | ForEach-Object { Write-Host "  appId=$($_.appId)  id=$($_.id)  displayName=$($_.displayName)" -ForegroundColor Red }
-  throw "Ambiguous match: $($matches.Count) applications found for '$DisplayName'. Specify a unique DisplayName or use Azure Portal to resolve duplicates."
+  $appMatches | ForEach-Object { Write-Host "  appId=$($_.appId)  id=$($_.id)  displayName=$($_.displayName)" -ForegroundColor Red }
+  throw "Ambiguous match: $($appMatches.Count) applications found for '$DisplayName'. Specify a unique DisplayName or use Azure Portal to resolve duplicates."
 }
-$existing = $matches | Select-Object -First 1
+$existing = $appMatches | Select-Object -First 1
 if (-not $existing) {
   Write-Info 'Creating application registration'
   $existing = az ad app create --display-name $DisplayName -o json | ConvertFrom-Json
