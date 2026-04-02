@@ -59,11 +59,18 @@ jobs:
 
       - name: Recover soft-deleted Key Vault (if exists)
         run: |
+          set -euo pipefail
           KV_NAME="kv${ORG}${ENV}${LOC}${UNIQUE_SUFFIX}"
-          DELETED=$(az keyvault list-deleted --query "[?name=='${KV_NAME}'].name" -o tsv 2>/dev/null || true)
-          if [ -n "$DELETED" ]; then
-            echo "Recovering soft-deleted Key Vault: $KV_NAME"
-            az keyvault recover --name "$KV_NAME" || true
+          echo "Checking for soft-deleted vault: $KV_NAME"
+          # Check if this specific vault is in soft-deleted state
+          if az keyvault show-deleted --name "$KV_NAME" -o none 2>/dev/null; then
+            echo "Found soft-deleted vault $KV_NAME — recovering..."
+            az keyvault recover --name "$KV_NAME"
+            echo "Waiting for recovery to complete..."
+            az keyvault wait --name "$KV_NAME" --resource-group "$RESOURCE_GROUP" --created
+            echo "Key Vault $KV_NAME recovered successfully"
+          else
+            echo "No soft-deleted vault found for $KV_NAME — clean deploy"
           fi
 
       - name: Validate Bicep Parameters
