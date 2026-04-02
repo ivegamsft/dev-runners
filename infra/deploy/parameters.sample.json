@@ -3,12 +3,12 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "org": { "value": "<your-org>" },
-    "env": { "value": "<environment>" },
+    "env": { "value": "dev" },
     "location": { "value": "<azure-region>" },
-    "loc": { "value": "<short-region-code>" },
+    "loc": { "value": "<caf-region-abbrev>" },
     "uniqueSuffix": { "value": "<unique-3-to-12-chars>" },
 
-    "adminUsername": { "value": "<vm-admin-username>" },
+    "adminUsername": { "value": "azureadmin" },
     "adminSshPublicKey": { "value": "<ssh-public-key>" },
     "adminPassword": { "value": "<secure-password-min-16-chars>" },
 

@@ -20,20 +20,24 @@ gh auth login
 
 ## Quick Start (Bootstrap)
 
-The bootstrap script handles everything from zero:
+The bootstrap script handles everything from zero. Only 4 params are required — everything else has smart defaults or is auto-generated:
 
 ```powershell
 pwsh scripts/bootstrap.ps1 `
-  -Org acme `
-  -Env dev `
-  -Location swedencentral `
-  -Loc sec `
-  -UniqueSuffix a1b2 `
-  -AdminUsername agentadmin `
+  -Org myorg `
   -SubscriptionId 00000000-0000-0000-0000-000000000000 `
   -GitHubRepo yourorg/dev-runners `
   -AdminSshPublicKeyFile ~/.ssh/id_rsa.pub
 ```
+
+Auto-derived/generated:
+- **Env** → `dev` (override with `-Env prod`)
+- **Location** → from `az config` or `eastus2` (override with `-Location westeurope`)
+- **Loc** → CAF abbreviation from Location (e.g. `eastus2` → `eus2`, `westeurope` → `we`)
+- **UniqueSuffix** → random 4-char alphanumeric (override with `-UniqueSuffix x7k2`)
+- **AdminUsername** → `azureadmin` (override with `-AdminUsername youruser`)
+- **ResourceGroup** → `rg-{org}-{env}-{loc}` (CAF standard)
+- **GalleryName** → `gal{org}{env}{loc}{suffix}` (no hyphens, Azure requirement)
 
 What it does:
 1. Checks prerequisites (az, gh, pwsh, jq, packer)
@@ -62,16 +66,16 @@ Go to **Settings → Secrets and variables → Variables** and set:
 
 | Variable | Example |
 |----------|---------|
-| `ORG` | `acme` |
+| `ORG` | `myorg` |
 | `ENV` | `dev` |
-| `LOCATION` | `swedencentral` |
-| `LOC` | `sec` |
+| `LOCATION` | `eastus2` |
+| `LOC` | `eus2` |
 | `UNIQUE_SUFFIX` | `a1b2` |
-| `RESOURCE_GROUP` | `rg-acme-dev-sec` |
-| `GALLERY_NAME` | `galacmedevseca1b2` |
+| `RESOURCE_GROUP` | `rg-myorg-dev-eus2` |
+| `GALLERY_NAME` | `galmyorgdeveus2a1b2` |
 | `PACKER_TEMP_RG` | `rg-packer-temp` |
 | `PACKER_VM_SIZE` | `Standard_D4s_v5` |
-| `ADMIN_USERNAME` | `agentadmin` |
+| `ADMIN_USERNAME` | `azureadmin` |
 
 ### 3. GitHub Repository Secrets
 
@@ -86,10 +90,10 @@ Go to **Settings → Secrets and variables → Variables** and set:
 
 ```powershell
 pwsh scripts/identity/setup-github-oidc.ps1 `
-  -DisplayName gh-oidc-acme-dev `
+  -DisplayName gh-oidc-myorg-dev `
   -GitHubOrg yourorg `
   -GitHubRepo dev-runners `
-  -ResourceGroup rg-acme-dev-sec `
+  -ResourceGroup rg-myorg-dev-eus2 `
   -Roles Contributor
 ```
 
@@ -113,7 +117,7 @@ bootstrap.ps1  →  deploy-base (marketplace images)
 # Full verification (offline + Azure)
 pwsh scripts/verify-environment.ps1 `
   -SubscriptionId 00000000-... `
-  -ResourceGroup rg-acme-dev-sec
+  -ResourceGroup rg-myorg-dev-eus2
 
 # Offline only (no Azure required)
 pwsh scripts/verify-environment.ps1 -SkipAzure
@@ -127,7 +131,7 @@ pwsh tests/parameter-tests.ps1
 
 The verify script checks:
 - Sample files exist with placeholders (no hardcoded values)
-- All static regression tests pass (138 assertions)
+- All static regression tests pass (188+ assertions)
 - Manifest is up to date
 - No secrets in tracked files
 - (With Azure) Resource group, Key Vault, Gallery, Identities, VMSS, VM, NSG
@@ -138,18 +142,18 @@ The verify script checks:
 # Preview what would be deleted
 pwsh scripts/cleanup.ps1 `
   -SubscriptionId 00000000-... `
-  -Org acme -Env dev -Loc sec `
+  -Org myorg -Env dev -Loc eus2 `
   -WhatIf
 
 # Delete Azure resources only
 pwsh scripts/cleanup.ps1 `
   -SubscriptionId 00000000-... `
-  -Org acme -Env dev -Loc sec
+  -Org myorg -Env dev -Loc eus2
 
 # Full cleanup (Azure + OIDC app + GitHub config)
 pwsh scripts/cleanup.ps1 `
   -SubscriptionId 00000000-... `
-  -Org acme -Env dev -Loc sec `
+  -Org myorg -Env dev -Loc eus2 `
   -GitHubRepo yourorg/dev-runners `
   -IncludeOidc -IncludeGitHub -Force
 ```

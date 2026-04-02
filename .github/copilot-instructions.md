@@ -16,9 +16,10 @@ manifests/agent-manifest.json ← Auto-generated inventory of scripts, agents, a
 
 **Deployment flow:** deploy base (marketplace images) → build Packer images → publish to gallery → redeploy base with gallery images.
 
-**Naming formula** — all resource names derive from four params:
-- `org`, `env`, `loc` (short region code), `uniqueSuffix`
-- Examples: `kv${org}${env}${loc}${uniqueSuffix}`, `vmss-${org}-${env}-ado-${loc}`
+**Naming formula** — follows Azure CAF conventions (`<type>-<workload>-<env>-<region>`):
+- Four seed params: `org`, `env` (default `dev`), `loc` (CAF region abbrev), `uniqueSuffix` (auto-generated)
+- Examples: `rg-myorg-dev-eus2`, `kv${org}${env}${loc}${suffix}`, `vmss-${org}-${env}-ado-${loc}`, `vnet-${org}-${env}-${loc}`
+- Subnet: `snet-agents`, NSG: `nsg-${org}-${env}-agents-${loc}`, Identity: `id-${org}-${env}-<role>`
 
 ## Lint & Validate Commands
 

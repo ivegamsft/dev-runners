@@ -5,40 +5,41 @@
 .DESCRIPTION
   Guides you from zero to a working deployment:
   1. Checks prerequisites (az, gh, pwsh, jq, packer)
-  2. Copies sample config files to local equivalents
+  2. Creates local config files (env/dev.json, parameters.local.json)
   3. Creates Azure resource group
   4. Sets up OIDC (Entra app + federated credential)
   5. Configures GitHub repo variables and secrets
   6. Runs first base deployment
 
-  Use -WhatIf to preview without making changes.
+  Only -Org, -SubscriptionId, -GitHubRepo, and -AdminSshPublicKeyFile are
+  truly required. Everything else has sensible defaults or is derived/generated.
 
 .PARAMETER Org
-  Short org identifier (lowercase, alphanumeric). E.g. myorg
-
-.PARAMETER Env
-  Environment code. E.g. dev, test, prod
-
-.PARAMETER Location
-  Azure region. E.g. swedencentral, eastus2
-
-.PARAMETER Loc
-  Short region code for naming. E.g. sec, eus2
-
-.PARAMETER UniqueSuffix
-  Random 3-12 char suffix for global uniqueness. E.g. x7k2
-
-.PARAMETER AdminUsername
-  VM admin username. E.g. youruser
+  Short org identifier (lowercase, alphanumeric). Required.
 
 .PARAMETER SubscriptionId
-  Azure subscription ID.
+  Azure subscription ID. Required.
 
 .PARAMETER GitHubRepo
-  GitHub repo in owner/repo format. E.g. yourorg/dev-runners
+  GitHub repo in owner/repo format. Required.
 
 .PARAMETER AdminSshPublicKeyFile
-  Path to SSH public key file for Linux VMs.
+  Path to SSH public key file for Linux VMs. Required.
+
+.PARAMETER Env
+  Environment code. Default: dev
+
+.PARAMETER Location
+  Azure region. Default: current az CLI default or eastus2.
+
+.PARAMETER Loc
+  Short region code for naming. Auto-derived from Location if omitted.
+
+.PARAMETER UniqueSuffix
+  Random 3-12 char suffix for global uniqueness. Auto-generated if omitted.
+
+.PARAMETER AdminUsername
+  VM admin username. Default: azureadmin
 
 .PARAMETER SkipDeploy
   Skip the initial base deployment (just configure).
@@ -47,18 +48,22 @@
   Preview actions without making changes.
 
 .EXAMPLE
-  ./bootstrap.ps1 -Org myorg -Env dev -Location eastus2 -Loc eus2 -UniqueSuffix x7k2 -AdminUsername youruser -SubscriptionId 00000000-0000-0000-0000-000000000000 -GitHubRepo yourorg/dev-runners -AdminSshPublicKeyFile ~/.ssh/id_rsa.pub
+  # Minimal — only the 4 required params, everything else derived/generated:
+  ./bootstrap.ps1 -Org myorg -SubscriptionId 00000000-0000-0000-0000-000000000000 -GitHubRepo yourorg/dev-runners -AdminSshPublicKeyFile ~/.ssh/id_rsa.pub
+
+  # Full override:
+  ./bootstrap.ps1 -Org myorg -Env prod -Location westeurope -Loc weu -UniqueSuffix x7k2 -AdminUsername youruser -SubscriptionId 00000000-0000-0000-0000-000000000000 -GitHubRepo yourorg/dev-runners -AdminSshPublicKeyFile ~/.ssh/id_rsa.pub
 #>
 param(
   [Parameter(Mandatory)][string]$Org,
-  [Parameter(Mandatory)][string]$Env,
-  [Parameter(Mandatory)][string]$Location,
-  [Parameter(Mandatory)][string]$Loc,
-  [Parameter(Mandatory)][string]$UniqueSuffix,
-  [Parameter(Mandatory)][string]$AdminUsername,
   [Parameter(Mandatory)][string]$SubscriptionId,
   [Parameter(Mandatory)][string]$GitHubRepo,
   [Parameter(Mandatory)][string]$AdminSshPublicKeyFile,
+  [string]$Env = 'dev',
+  [string]$Location,
+  [string]$Loc,
+  [string]$UniqueSuffix,
+  [string]$AdminUsername = 'azureadmin',
   [switch]$SkipDeploy,
   [switch]$WhatIf
 )
@@ -100,8 +105,60 @@ if ($missing.Count -gt 0) {
   exit 1
 }
 
-# ─── 2. Validate inputs ──────────────────────────────────────────────────────
-Write-Step '2. Validating inputs'
+# ─── 2. Derive and generate defaults ──────────────────────────────────────────
+Write-Step '2. Resolving parameters'
+
+# Location: default from az CLI config, fallback to eastus2
+if (-not $Location) {
+  $Location = (az config get defaults.location --query value -o tsv 2>$null)
+  if (-not $Location) { $Location = 'eastus2' }
+  Write-Ok "Location (auto): $Location"
+} else { Write-Ok "Location: $Location" }
+
+# Loc: derive short code from Azure region using CAF abbreviations
+if (-not $Loc) {
+  $regionMap = @{
+    # Americas
+    eastus='eus'; eastus2='eus2'; westus='wus'; westus2='wus2'; westus3='wus3'
+    centralus='cus'; northcentralus='ncus'; southcentralus='scus'; westcentralus='wcus'
+    canadacentral='cnc'; canadaeast='cne'
+    brazilsouth='brs'; brazilsoutheast='brse'
+    # Europe
+    northeurope='ne'; westeurope='we'; uksouth='uks'; ukwest='ukw'
+    francecentral='frc'; francesouth='frs'; germanywestcentral='gwc'; germanynorth='gn'
+    swedencentral='swc'; switzerlandnorth='szn'; switzerlandwest='szw'
+    norwayeast='nwe'; norwaywest='nww'; polandcentral='plc'; italynorth='itn'
+    spaincentral='spc'
+    # Asia Pacific
+    australiaeast='ae'; australiasoutheast='ase'; australiacentral='acl'
+    eastasia='ea'; southeastasia='sea'
+    japaneast='jpe'; japanwest='jpw'
+    koreacentral='krc'; koreasouth='krs'
+    centralindia='inc'; southindia='ins'; westindia='inw'
+    # Middle East & Africa
+    southafricanorth='san'; southafricawest='saw'
+    uaenorth='uan'; uaecentral='uac'
+    qatarcentral='qac'; israelcentral='ilc'
+  }
+  $Loc = $regionMap[$Location]
+  if (-not $Loc) {
+    # Fallback: first 3-4 chars stripped of vowels
+    $Loc = ($Location -replace '[aeiou\-]','').Substring(0, [Math]::Min(4, ($Location -replace '[aeiou\-]','').Length))
+  }
+  Write-Ok "Loc (derived from $Location): $Loc"
+} else { Write-Ok "Loc: $Loc" }
+
+# UniqueSuffix: generate 4-char random alphanumeric
+if (-not $UniqueSuffix) {
+  $UniqueSuffix = -join ((97..122) + (48..57) | Get-Random -Count 4 | ForEach-Object { [char]$_ })
+  Write-Ok "UniqueSuffix (generated): $UniqueSuffix"
+} else { Write-Ok "UniqueSuffix: $UniqueSuffix" }
+
+Write-Ok "Env: $Env"
+Write-Ok "AdminUsername: $AdminUsername"
+
+# ─── 3. Validate inputs ──────────────────────────────────────────────────────
+Write-Step '3. Validating inputs'
 
 if (-not (Test-Path $AdminSshPublicKeyFile)) {
   throw "SSH public key file not found: $AdminSshPublicKeyFile"

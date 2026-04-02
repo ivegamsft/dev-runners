@@ -1,7 +1,7 @@
 @description('Short org identifier (lowercase, alphanumeric).')
 param org string
 @description('Environment code, e.g. dev, test, prod.')
-param env string
+param env string = 'dev'
 @description('Azure region for deployment.')
 param location string = resourceGroup().location
 @description('Short region code used in names (e.g. weu, use).')
@@ -12,7 +12,7 @@ param loc string
 param uniqueSuffix string
 
 @description('Admin username for VMs (stored also as secret).')
-param adminUsername string
+param adminUsername string = 'azureadmin'
 @description('SSH public key for Linux agents (e.g. ssh-ed25519 or ssh-rsa). Password auth disabled when provided.')
 param adminSshPublicKey string
 @description('Temporarily allow password auth for Linux agents (fallback if SSH key validation fails).')
@@ -74,7 +74,7 @@ var ghVmName = toLower('vm-${org}-${env}-gh-${loc}')
 // Windows computer name (NetBIOS) max 15 chars; derive truncated safe version.
 var ghComputerName = toLower(substring(ghVmName, 0, min(length(ghVmName), 15)))
 var vnetName = toLower('vnet-${org}-${env}-${loc}')
-var subnetAgentsName = 'agents'
+var subnetAgentsName = 'snet-agents'
 var linuxIdResName = toLower('id-${org}-${env}-lin-agents')
 var winIdResName = toLower('id-${org}-${env}-win-agents')
 var ghIdResName = toLower('id-${org}-${env}-gh-runner')

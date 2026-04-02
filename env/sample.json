@@ -2,10 +2,10 @@
   "ORG": "<your-org>",
   "ENV": "<environment>",
   "LOCATION": "<azure-region>",
-  "LOC": "<short-region-code>",
+  "LOC": "<caf-region-abbrev>",
   "UNIQUE_SUFFIX": "<unique-3-to-12-chars>",
-  "RESOURCE_GROUP": "rg-<your-org>-<environment>-<short-region-code>",
-  "GALLERY_NAME": "gal<your-org><environment><short-region-code><unique-suffix>",
+  "RESOURCE_GROUP": "rg-<your-org>-<environment>-<caf-region-abbrev>",
+  "GALLERY_NAME": "gal<your-org><environment><caf-region-abbrev><unique-suffix>",
   "PACKER_TEMP_RG": "rg-packer-temp",
   "PACKER_VM_SIZE": "Standard_D4s_v5",
   "ADMIN_USERNAME": "<vm-admin-username>"

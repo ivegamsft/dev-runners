@@ -178,6 +178,78 @@ Assert-Test `
   (-not $sshKeyFound) `
   'Found real SSH key material in tracked files'
 
+# ─── CAF naming compliance ────────────────────────────────────────────────────
+Write-Host "`n=== CAF naming standards ===" -ForegroundColor Cyan
+
+$mainBicep = Get-Content (Join-Path $repoRoot 'infra\base\main.bicep') -Raw
+
+# Positive: Subnet uses snet- prefix
+Assert-Test `
+  'Subnet variable uses snet- prefix (CAF)' `
+  ($mainBicep -match "subnetAgentsName\s*=\s*'snet-") `
+  'Subnet name does not follow CAF snet- prefix convention'
+
+# Positive: env/sample.json uses caf-region-abbrev
+$envSample = Get-Content (Join-Path $repoRoot 'env\sample.json') -Raw
+Assert-Test `
+  'env/sample.json references caf-region-abbrev' `
+  ($envSample -match 'caf-region-abbrev') `
+  'env/sample.json does not reference CAF region abbreviation'
+
+# Positive: Bicep env param has default value
+Assert-Test `
+  'Bicep env parameter has default value' `
+  ($mainBicep -match "param\s+env\s+string\s*=\s*'dev'") `
+  'Bicep env parameter missing default value'
+
+# Positive: Bicep adminUsername param has default value
+Assert-Test `
+  'Bicep adminUsername has default value' `
+  ($mainBicep -match "param\s+adminUsername\s+string\s*=\s*'azureadmin'") `
+  'Bicep adminUsername parameter missing default value'
+
+# Positive: Bootstrap has CAF region map
+$bootstrap = Get-Content (Join-Path $repoRoot 'scripts\bootstrap.ps1') -Raw
+Assert-Test `
+  'Bootstrap has CAF region abbreviation map' `
+  ($bootstrap -match 'eastus2.*eus2|eus2.*eastus2') `
+  'Bootstrap missing CAF region abbreviation map'
+
+# Positive: Bootstrap has only 4 mandatory params
+Assert-Test `
+  'Bootstrap Org is mandatory' `
+  ($bootstrap -match '\[Parameter\(Mandatory[^]]*\]\s*\[string\]\s*\$Org') `
+  'Org should be mandatory in bootstrap'
+
+Assert-Test `
+  'Bootstrap SubscriptionId is mandatory' `
+  ($bootstrap -match '\[Parameter\(Mandatory[^]]*\]\s*\[string\]\s*\$SubscriptionId') `
+  'SubscriptionId should be mandatory in bootstrap'
+
+Assert-Test `
+  'Bootstrap Env has default value' `
+  ($bootstrap -match "\[string\]\s*\`$Env\s*=\s*'dev'") `
+  'Env should have a default value in bootstrap'
+
+# Positive: GETTING_STARTED.md uses generic examples
+$gettingStarted = Get-Content (Join-Path $repoRoot 'docs\GETTING_STARTED.md') -Raw
+Assert-Test `
+  'GETTING_STARTED uses myorg examples (not acme)' `
+  ($gettingStarted -notmatch '\bacme\b') `
+  'GETTING_STARTED.md still references acme'
+
+# Positive: base parameters.sample.json has defaults for env and adminUsername
+$baseSample = Get-Content (Join-Path $repoRoot 'infra\base\parameters.sample.json') -Raw | ConvertFrom-Json
+Assert-Test `
+  'base parameters.sample.json env defaults to dev' `
+  ($baseSample.parameters.env.value -eq 'dev') `
+  'base parameters.sample.json env should default to dev'
+
+Assert-Test `
+  'base parameters.sample.json adminUsername defaults to azureadmin' `
+  ($baseSample.parameters.adminUsername.value -eq 'azureadmin') `
+  'base parameters.sample.json adminUsername should default to azureadmin'
+
 # ─── Summary ─────────────────────────────────────────────────────────────────
 Write-Host "`n$('='*60)" -ForegroundColor White
 Write-Host "Parameter Tests: $pass passed, $fail failed" -ForegroundColor $(if ($fail -eq 0) { 'Green' } else { 'Red' })

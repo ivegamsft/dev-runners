@@ -4,8 +4,8 @@
   "scripts": [
     {
       "path": "scripts\\bootstrap.ps1",
-      "sizeBytes": 12953,
-      "sha256": "6954564a4149910ffc65fca1a844462a3650ecd0d7d9ae8ca80fc92d5bb9b12d"
+      "sizeBytes": 15652,
+      "sha256": "15d18bb8445e8c70ddd2c2c148f16dc3e85fe603de3ccb71b82568094427ba26"
     },
     {
       "path": "scripts\\cleanup.ps1",
