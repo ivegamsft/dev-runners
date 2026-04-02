@@ -55,7 +55,7 @@ jobs:
 
       - name: Create Resource Group (idempotent)
         run: |
-          az group create -n "$RESOURCE_GROUP" -l "$LOCATION" --tags system=build-agents || true
+          az group create -n "$RESOURCE_GROUP" -l "$LOCATION" --tags system=build-agents
 
       - name: Validate Bicep Parameters
         run: |

@@ -27,7 +27,7 @@ param linuxSku string = 'linux'
 param windowsSku string = 'windows'
 
 // Image Definitions (no versions — versions created by pipeline/AIB)
-// Using supported API version (2023-07-03) instead of 2023-07-01 which failed in swedencentral
+// Using supported API version (2023-07-03) for broad region availability
 resource linuxImageDef 'Microsoft.Compute/galleries/images@2023-07-03' = {
   name: '${galleryName}/${linuxImageDefinitionName}'
   location: location

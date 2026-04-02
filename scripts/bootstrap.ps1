@@ -14,7 +14,7 @@
   Use -WhatIf to preview without making changes.
 
 .PARAMETER Org
-  Short org identifier (lowercase, alphanumeric). E.g. acme
+  Short org identifier (lowercase, alphanumeric). E.g. myorg
 
 .PARAMETER Env
   Environment code. E.g. dev, test, prod
@@ -26,16 +26,16 @@
   Short region code for naming. E.g. sec, eus2
 
 .PARAMETER UniqueSuffix
-  Random 3-12 char suffix for global uniqueness. E.g. a1b2
+  Random 3-12 char suffix for global uniqueness. E.g. x7k2
 
 .PARAMETER AdminUsername
-  VM admin username. E.g. agentadmin
+  VM admin username. E.g. youruser
 
 .PARAMETER SubscriptionId
   Azure subscription ID.
 
 .PARAMETER GitHubRepo
-  GitHub repo in owner/repo format. E.g. ivegamsft/dev-runners
+  GitHub repo in owner/repo format. E.g. yourorg/dev-runners
 
 .PARAMETER AdminSshPublicKeyFile
   Path to SSH public key file for Linux VMs.
@@ -47,7 +47,7 @@
   Preview actions without making changes.
 
 .EXAMPLE
-  ./bootstrap.ps1 -Org acme -Env dev -Location swedencentral -Loc sec -UniqueSuffix a1b2 -AdminUsername agentadmin -SubscriptionId 00000000-0000-0000-0000-000000000000 -GitHubRepo ivegamsft/dev-runners -AdminSshPublicKeyFile ~/.ssh/id_rsa.pub
+  ./bootstrap.ps1 -Org myorg -Env dev -Location eastus2 -Loc eus2 -UniqueSuffix x7k2 -AdminUsername youruser -SubscriptionId 00000000-0000-0000-0000-000000000000 -GitHubRepo yourorg/dev-runners -AdminSshPublicKeyFile ~/.ssh/id_rsa.pub
 #>
 param(
   [Parameter(Mandatory)][string]$Org,

@@ -45,10 +45,10 @@
 
 .EXAMPLE
   # Basic cleanup (Azure RG only)
-  pwsh scripts/cleanup.ps1 -SubscriptionId 00000000-... -Org acme -Env dev -Loc sec
+  pwsh scripts/cleanup.ps1 -SubscriptionId 00000000-... -Org myorg -Env dev -Loc eus2
 
   # Full cleanup (Azure + OIDC + GitHub)
-  pwsh scripts/cleanup.ps1 -SubscriptionId 00000000-... -Org acme -Env dev -Loc sec -GitHubRepo ivegamsft/dev-runners -IncludeOidc -IncludeGitHub -Force
+  pwsh scripts/cleanup.ps1 -SubscriptionId 00000000-... -Org myorg -Env dev -Loc eus2 -GitHubRepo yourorg/dev-runners -IncludeOidc -IncludeGitHub -Force
 #>
 param(
   [Parameter(Mandatory)][string]$SubscriptionId,
@@ -211,7 +211,7 @@ if ($WhatIf) {
   Write-Host @"
 
   Resource group deletion is async — it may take a few minutes to fully complete.
-  Verify with: az group show -n $resourceGroup 2>&1 | head -1
+  Verify with: az group show -n $resourceGroup 2>&1 | Select-Object -First 1
 
   To remove local config files:
     Remove-Item env/dev.json, infra/*/parameters.local.json -ErrorAction SilentlyContinue

@@ -65,12 +65,14 @@ Write-Host "`n=== Sample files use placeholders ===" -ForegroundColor Cyan
 $envSample = Get-Content (Join-Path $repoRoot 'env\sample.json') -Raw
 $baseSample = Get-Content (Join-Path $repoRoot 'infra\base\parameters.sample.json') -Raw
 $imagesSample = Get-Content (Join-Path $repoRoot 'infra\images\parameters.sample.json') -Raw
+$deploySample = Get-Content (Join-Path $repoRoot 'infra\deploy\parameters.sample.json') -Raw
 
 # Positive: sample files contain angle-bracket placeholders
 foreach ($item in @(
   @{name='env/sample.json'; content=$envSample},
   @{name='infra/base/parameters.sample.json'; content=$baseSample},
-  @{name='infra/images/parameters.sample.json'; content=$imagesSample}
+  @{name='infra/images/parameters.sample.json'; content=$imagesSample},
+  @{name='infra/deploy/parameters.sample.json'; content=$deploySample}
 )) {
   Assert-Test `
     "$($item.name) uses <placeholder> values" `
@@ -83,7 +85,8 @@ $orgPatterns = @('acme', 'a1b2', 'swedencentral', 'galacmedev', 'ssh-rsa AAAA', 
 foreach ($item in @(
   @{name='env/sample.json'; content=$envSample},
   @{name='infra/base/parameters.sample.json'; content=$baseSample},
-  @{name='infra/images/parameters.sample.json'; content=$imagesSample}
+  @{name='infra/images/parameters.sample.json'; content=$imagesSample},
+  @{name='infra/deploy/parameters.sample.json'; content=$deploySample}
 )) {
   foreach ($pat in $orgPatterns) {
     Assert-Test `

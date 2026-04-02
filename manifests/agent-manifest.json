@@ -4,28 +4,28 @@
   "scripts": [
     {
       "path": "scripts\\bootstrap.ps1",
-      "sizeBytes": 12964,
-      "sha256": "a8e58dc94a662dadcb27861fbc0645de1f5883d1f2a14d03caa3b3df4a352575"
+      "sizeBytes": 12953,
+      "sha256": "6954564a4149910ffc65fca1a844462a3650ecd0d7d9ae8ca80fc92d5bb9b12d"
     },
     {
       "path": "scripts\\cleanup.ps1",
-      "sizeBytes": 9012,
-      "sha256": "a638e11acd6da5e67cbbd7e861084642009f5a02dac7eda4f7554b4b689698b3"
+      "sizeBytes": 9029,
+      "sha256": "4d335fc02116ca977564057804a15bed0b099f275faeee58fdd9f108fb1420ce"
     },
     {
       "path": "scripts\\deploy\\deploy-base.ps1",
-      "sizeBytes": 1733,
-      "sha256": "07a998559e932abcda74fb7a225b4c3b03dfb0045880b9020fdadbd065e3bc62"
+      "sizeBytes": 1800,
+      "sha256": "a92efd554f94f37b0a9f054bf1c4cbb147462b53dc6c9cbd85cb3e1d5055b2ec"
     },
     {
       "path": "scripts\\deploy\\deploy-from-gallery.ps1",
-      "sizeBytes": 3179,
-      "sha256": "e18a46213ef4620a2e438c1b62cb34ed57a163596f3c128294e5f52a471d159f"
+      "sizeBytes": 3299,
+      "sha256": "0b7d5b9f98b32dbb47fde50e018c5a52740d300ef558b70edfdf9f9b03d57f83"
     },
     {
       "path": "scripts\\deploy\\deploy-images.ps1",
-      "sizeBytes": 1340,
-      "sha256": "a514d8c49c67fcbaab30272feb6cd6025ac4e8cdae942ca6055ac8827c98a826"
+      "sizeBytes": 1407,
+      "sha256": "ba96ab7f8cdcc0add2ec6065ef0d0221f2e0fa49d840d930c0d6157f719015cb"
     },
     {
       "path": "scripts\\deploy\\README.md",
@@ -34,8 +34,8 @@
     },
     {
       "path": "scripts\\identity\\check-secret-expiry.ps1",
-      "sizeBytes": 2137,
-      "sha256": "dc9edb5cc6de2ad5ef3f295bd14b6460db26a28a38a553cc3e6835eca057d197"
+      "sizeBytes": 2169,
+      "sha256": "3f6c87781532ec68f574de9e50886668f52627640f7824cca024b7beb5f60c39"
     },
     {
       "path": "scripts\\identity\\configure-branch-protection.ps1",
@@ -49,8 +49,8 @@
     },
     {
       "path": "scripts\\identity\\setup-github-oidc.ps1",
-      "sizeBytes": 4773,
-      "sha256": "e9e9a24e2130fbe6599881ace7b224e9f80f945580f2624f0c747e40774a141f"
+      "sizeBytes": 4806,
+      "sha256": "6a1c97b6a36304780bed633d24b627d852d5f191698c32f9d961f7d47b8be8dc"
     },
     {
       "path": "scripts\\image\\checksums.json",
@@ -94,13 +94,13 @@
     },
     {
       "path": "scripts\\validate\\validate-base.ps1",
-      "sizeBytes": 3286,
-      "sha256": "89ecebeccd61d61659b072824101051ff9491590e696c6763a9e71ea2d83497d"
+      "sizeBytes": 4024,
+      "sha256": "b7caf7aea0b37f5ee467f7e3a85a99cd5d2af6e2f28801ec3b601a2654ed99f5"
     },
     {
       "path": "scripts\\verify-environment.ps1",
-      "sizeBytes": 9120,
-      "sha256": "1bab82dc7ce198dec03ce9b8bf730aec5351daefa22ac836bd2030783aca2e99"
+      "sizeBytes": 9122,
+      "sha256": "9e9462fe6be355dc732ac744c89f11a3c0d8a6f11ed2ff56ec80aa318f820d6a"
     }
   ],
   "copilotAgents": [

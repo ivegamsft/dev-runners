@@ -61,8 +61,8 @@ jobs:
         id: versions
         shell: bash
         run: |
-          LINUX_VER=$(az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition linux-agent --query '[-1].name' -o tsv)
-          WIN_VER=$(az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition windows-agent --query '[-1].name' -o tsv)
+          LINUX_VER=$(az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition linux-agent --query 'sort_by(@, &publishingProfile.publishedDate)[-1].name' -o tsv)
+          WIN_VER=$(az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition windows-agent --query 'sort_by(@, &publishingProfile.publishedDate)[-1].name' -o tsv)
           if [ -z "$LINUX_VER" ] || [ -z "$WIN_VER" ]; then
             echo "Missing gallery versions: linux='$LINUX_VER' windows='$WIN_VER'" >&2
             exit 1

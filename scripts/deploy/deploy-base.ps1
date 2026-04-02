@@ -7,6 +7,9 @@ param(
   [switch]$WhatIf
 )
 
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
 # Load defaults from env config if parameters not explicitly provided
 if (-not $EnvConfig) {
   $EnvConfig = Join-Path $PSScriptRoot '..\..\env\dev.json'

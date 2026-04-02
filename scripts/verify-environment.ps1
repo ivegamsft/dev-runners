@@ -22,7 +22,7 @@
 
 .EXAMPLE
   # Full verification (offline + Azure)
-  pwsh scripts/verify-environment.ps1 -SubscriptionId 00000000-... -ResourceGroup rg-acme-dev-sec
+  pwsh scripts/verify-environment.ps1 -SubscriptionId 00000000-... -ResourceGroup rg-myorg-dev-eus2
 
   # Offline only (no Azure required)
   pwsh scripts/verify-environment.ps1 -SkipAzure

@@ -14,6 +14,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
 
 $TemplateFile = Join-Path $PSScriptRoot '..\..\infra\deploy\main.bicep'
 if (-not (Test-Path $TemplateFile)) {
@@ -23,8 +24,8 @@ if (-not (Test-Path $TemplateFile)) {
 if (-not $GalleryName) { $GalleryName = ("gal{0}{1}{2}{3}" -f $Org,$Env,$Loc,$UniqueSuffix).ToLower() }
 
 Write-Host "Resolving latest gallery versions in '$GalleryName'..." -ForegroundColor Cyan
-$linuxVer = az sig image-version list -g $ResourceGroup --gallery-name $GalleryName --gallery-image-definition $LinuxImageDefinition --query '[-1].name' -o tsv
-$winVer   = az sig image-version list -g $ResourceGroup --gallery-name $GalleryName --gallery-image-definition $WindowsImageDefinition --query '[-1].name' -o tsv
+$linuxVer = az sig image-version list -g $ResourceGroup --gallery-name $GalleryName --gallery-image-definition $LinuxImageDefinition --query 'sort_by(@, &publishingProfile.publishedDate)[-1].name' -o tsv
+$winVer   = az sig image-version list -g $ResourceGroup --gallery-name $GalleryName --gallery-image-definition $WindowsImageDefinition --query 'sort_by(@, &publishingProfile.publishedDate)[-1].name' -o tsv
 
 if (-not $linuxVer -or -not $winVer) {
   throw "Could not resolve both gallery versions (linux='$linuxVer' windows='$winVer'). Ensure images are built."

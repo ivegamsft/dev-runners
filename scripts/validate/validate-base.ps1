@@ -1,9 +1,10 @@
 param(
   [string]$SubscriptionId,
   [string]$ResourceGroup,
-  [string]$ExpectedOrg = 'acme',
-  [string]$ExpectedEnv = 'dev',
-  [string]$ExpectedLoc = 'sec',
+  [string]$EnvConfig,
+  [string]$ExpectedOrg,
+  [string]$ExpectedEnv,
+  [string]$ExpectedLoc,
   [bool]$ExpectLinuxPasswordAuthDisabled = $true
 )
 
@@ -11,6 +12,27 @@ if (-not $SubscriptionId -or -not $ResourceGroup) {
   Write-Error 'SubscriptionId and ResourceGroup are required.'
   exit 1
 }
+
+# Load expected values from env config if not provided explicitly
+if (-not $ExpectedOrg -or -not $ExpectedEnv -or -not $ExpectedLoc) {
+  if (-not $EnvConfig) {
+    $EnvConfig = Join-Path $PSScriptRoot '..\env\dev.json'
+  }
+  if (Test-Path $EnvConfig) {
+    $cfg = Get-Content $EnvConfig -Raw | ConvertFrom-Json
+    if (-not $ExpectedOrg) { $ExpectedOrg = $cfg.ORG }
+    if (-not $ExpectedEnv) { $ExpectedEnv = $cfg.ENV }
+    if (-not $ExpectedLoc) { $ExpectedLoc = $cfg.LOC }
+  }
+}
+
+if (-not $ExpectedOrg -or -not $ExpectedEnv -or -not $ExpectedLoc) {
+  Write-Error 'Provide -ExpectedOrg/-ExpectedEnv/-ExpectedLoc or a valid env config file.'
+  exit 1
+}
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
 az account set --subscription $SubscriptionId
 

@@ -56,7 +56,7 @@ jobs:
 
       - name: Create Resource Group (idempotent)
         run: |
-          az group create -n $RESOURCE_GROUP -l $LOCATION --tags system=build-agents || true
+          az group create -n $RESOURCE_GROUP -l $LOCATION --tags system=build-agents
 
       - name: Deploy Image Definitions (idempotent)
         run: |
@@ -170,7 +170,8 @@ jobs:
         with:
           name: packer-${{ matrix.image }}-metadata
           path: |
-            .
+            packer-manifest.json
+            ${{ matrix.template }}
           if-no-files-found: ignore
         continue-on-error: true
 

@@ -42,7 +42,7 @@ Array of Azure built-in role names to assign at scope.
 JSON with appId, objectId, federatedCredentialName.
 
 .EXAMPLE
-  ./setup-github-oidc.ps1 -DisplayName gh-oidc-acme-dev -GitHubOrg ivegamsft -GitHubRepo dev-runners -Branch main -ResourceGroup rg-acme-dev-sec -Roles Contributor
+  ./setup-github-oidc.ps1 -DisplayName gh-oidc-myorg-dev -GitHubOrg yourorg -GitHubRepo dev-runners -Branch main -ResourceGroup rg-myorg-dev-eus2 -Roles Contributor
 #>
 param(
   [Parameter(Mandatory)][string]$DisplayName,
@@ -58,6 +58,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
 
 function Write-Info($m){ Write-Host $m -ForegroundColor Cyan }
 function Write-Warn($m){ Write-Host $m -ForegroundColor Yellow }
