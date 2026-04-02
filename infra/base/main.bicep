@@ -151,6 +151,101 @@ resource ghRunnerIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023
 }
 // Removed deploy identity.
 
+// Network Security Group — default-deny egress with explicit allowlist
+resource nsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+  name: 'nsg-${org}-${env}-agents-${loc}'
+  location: location
+  tags: standardTags
+  properties: {
+    securityRules: [
+      // Allow HTTPS outbound (GitHub, Azure DevOps, package registries)
+      {
+        name: 'Allow-HTTPS-Outbound'
+        properties: {
+          priority: 100
+          direction: 'Outbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'Internet'
+        }
+      }
+      // Allow HTTP outbound (package managers, apt)
+      {
+        name: 'Allow-HTTP-Outbound'
+        properties: {
+          priority: 110
+          direction: 'Outbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'Internet'
+        }
+      }
+      // Allow Azure services (Key Vault, IMDS, ARM)
+      {
+        name: 'Allow-AzureCloud-Outbound'
+        properties: {
+          priority: 120
+          direction: 'Outbound'
+          access: 'Allow'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'AzureCloud'
+        }
+      }
+      // Allow DNS
+      {
+        name: 'Allow-DNS-Outbound'
+        properties: {
+          priority: 130
+          direction: 'Outbound'
+          access: 'Allow'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '53'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      // Deny all other outbound
+      {
+        name: 'Deny-All-Outbound'
+        properties: {
+          priority: 4000
+          direction: 'Outbound'
+          access: 'Deny'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      // Deny all inbound from Internet (default, but explicit)
+      {
+        name: 'Deny-Internet-Inbound'
+        properties: {
+          priority: 4000
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: 'Internet'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
 // Networking
 resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: vnetName
@@ -165,6 +260,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
         name: subnetAgentsName
         properties: {
           addressPrefix: subnetAgentsCidr
+          networkSecurityGroup: { id: nsg.id }
           privateEndpointNetworkPolicies: 'Enabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
@@ -395,3 +491,4 @@ output keyVaultName string = kv.name
 output vmssNameOut string = vmssAdo.name
 output ghVmNameOut string = ghVm.name
 output githubOidcClientIdOut string = githubOidcClientId
+output nsgName string = nsg.name

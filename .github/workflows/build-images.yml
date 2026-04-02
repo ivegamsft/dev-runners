@@ -132,6 +132,57 @@ jobs:
           if-no-files-found: ignore
         continue-on-error: true
 
+      - name: Generate Build Provenance
+        id: provenance
+        shell: bash
+        run: |
+          cat > provenance-${{ matrix.image }}.json <<EOF
+          {
+            "builder": {
+              "id": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            },
+            "buildType": "packer-azure-image",
+            "invocation": {
+              "configSource": {
+                "uri": "git+https://github.com/${{ github.repository }}@${{ github.ref }}",
+                "digest": { "sha1": "${{ github.sha }}" },
+                "entryPoint": "${{ matrix.template }}"
+              }
+            },
+            "metadata": {
+              "buildStartedOn": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "completeness": { "parameters": true, "environment": true, "materials": false }
+            },
+            "materials": [
+              {
+                "uri": "git+https://github.com/${{ github.repository }}@${{ github.ref }}",
+                "digest": { "sha1": "${{ github.sha }}" }
+              }
+            ]
+          }
+          EOF
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign Provenance (keyless OIDC)
+        shell: bash
+        run: |
+          cosign sign-blob --yes \
+            --oidc-issuer https://token.actions.githubusercontent.com \
+            --output-signature provenance-${{ matrix.image }}.sig \
+            --output-certificate provenance-${{ matrix.image }}.crt \
+            provenance-${{ matrix.image }}.json
+
+      - name: Upload Signed Provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: provenance-${{ matrix.image }}
+          path: |
+            provenance-${{ matrix.image }}.json
+            provenance-${{ matrix.image }}.sig
+            provenance-${{ matrix.image }}.crt
+
   summary:
     name: Summary
     runs-on: ubuntu-latest

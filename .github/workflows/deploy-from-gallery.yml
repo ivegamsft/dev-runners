@@ -19,6 +19,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 jobs:
   deploy:
@@ -52,6 +53,41 @@ jobs:
           echo "linux=$LINUX_VER" >> $GITHUB_OUTPUT
           echo "windows=$WIN_VER" >> $GITHUB_OUTPUT
           echo "Resolved linux=$LINUX_VER windows=$WIN_VER"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Verify Build Provenance
+        shell: bash
+        continue-on-error: true
+        run: |
+          echo "Checking for signed provenance artifacts..."
+          # Download the latest provenance from the most recent build-images run
+          RUN_ID=$(gh run list --workflow=build-images.yml --branch=main --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
+          if [ -z "$RUN_ID" ]; then
+            echo "::warning::No successful build-images run found. Skipping provenance verification."
+            exit 0
+          fi
+          
+          gh run download "$RUN_ID" -n provenance-linux -D provenance-linux 2>/dev/null || true
+          gh run download "$RUN_ID" -n provenance-windows -D provenance-windows 2>/dev/null || true
+          
+          VERIFIED=0
+          for img in linux windows; do
+            if [ -f "provenance-$img/provenance-$img.json" ] && [ -f "provenance-$img/provenance-$img.sig" ] && [ -f "provenance-$img/provenance-$img.crt" ]; then
+              echo "Verifying $img provenance..."
+              cosign verify-blob \
+                --certificate provenance-$img/provenance-$img.crt \
+                --signature provenance-$img/provenance-$img.sig \
+                --certificate-identity-regexp "https://github.com/${{ github.repository }}/" \
+                --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+                provenance-$img/provenance-$img.json && ((VERIFIED++))
+            else
+              echo "::warning::No signed provenance found for $img image"
+            fi
+          done
+          
+          echo "Verified $VERIFIED provenance attestations"
 
       - name: Resolve Admin Password
         id: admin_password
