@@ -302,6 +302,16 @@ if ($WhatIf) {
   $clientId = $oidcResult.appId
   $tenantId = (az account show --query tenantId -o tsv)
   Write-Ok "OIDC App: $displayName (clientId: $clientId)"
+
+  # Grant subscription-level Key Vault Contributor for soft-deleted vault recovery
+  $subScope = "/subscriptions/$SubscriptionId"
+  $spOid = $oidcResult.objectId
+  $existingKvRole = az role assignment list --assignee $spOid --scope $subScope --role 'Key Vault Contributor' -o json | ConvertFrom-Json
+  if (-not $existingKvRole) {
+    Write-Host "    Assigning Key Vault Contributor at subscription scope (for soft-deleted KV recovery)..." -ForegroundColor Cyan
+    az role assignment create --assignee-object-id $spOid --assignee-principal-type ServicePrincipal --role 'Key Vault Contributor' --scope $subScope | Out-Null
+  }
+  Write-Ok 'Key Vault Contributor at subscription scope'
 }
 
 # ─── 6. GitHub Configuration ─────────────────────────────────────────────────

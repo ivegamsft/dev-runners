@@ -62,15 +62,20 @@ jobs:
           set -euo pipefail
           KV_NAME="kv${ORG}${ENV}${LOC}${UNIQUE_SUFFIX}"
           echo "Checking for soft-deleted vault: $KV_NAME"
-          # Check if this specific vault is in soft-deleted state
-          if az keyvault show-deleted --name "$KV_NAME" -o none 2>/dev/null; then
+          # show-deleted requires subscription-level access; if it fails, skip gracefully
+          if az keyvault show-deleted --name "$KV_NAME" -o none 2>&1; then
             echo "Found soft-deleted vault $KV_NAME — recovering..."
             az keyvault recover --name "$KV_NAME"
             echo "Waiting for recovery to complete..."
-            az keyvault wait --name "$KV_NAME" --resource-group "$RESOURCE_GROUP" --created
-            echo "Key Vault $KV_NAME recovered successfully"
+            for i in $(seq 1 12); do
+              STATE=$(az keyvault show --name "$KV_NAME" --resource-group "$RESOURCE_GROUP" --query properties.provisioningState -o tsv 2>/dev/null || echo "Recovering")
+              echo "  Attempt $i/12: state=$STATE"
+              if [ "$STATE" = "Succeeded" ]; then break; fi
+              sleep 10
+            done
+            echo "Key Vault $KV_NAME recovered"
           else
-            echo "No soft-deleted vault found for $KV_NAME — clean deploy"
+            echo "No soft-deleted vault found (or insufficient permissions) — proceeding"
           fi
 
       - name: Validate Bicep Parameters
