@@ -3,116 +3,116 @@
   "description": "Version-controlled inventory of scripts, Copilot custom agents, and runner image provisioning hints.",
   "scripts": [
     {
-      "path": "scripts\\bootstrap.ps1",
+      "path": "scripts/bootstrap.ps1",
       "sizeBytes": 16374,
       "sha256": "a5991e8cc3873630ed7ea6cd90bf19f7de79c32c39c3f80ce86d7230102a1c95"
     },
     {
-      "path": "scripts\\cleanup.ps1",
+      "path": "scripts/cleanup.ps1",
       "sizeBytes": 10650,
       "sha256": "fdcc401623e942b7a5239d5ca466d059a44c9226466b1fe404018c4711657272"
     },
     {
-      "path": "scripts\\deploy\\deploy-base.ps1",
+      "path": "scripts/deploy/deploy-base.ps1",
       "sizeBytes": 1800,
       "sha256": "a92efd554f94f37b0a9f054bf1c4cbb147462b53dc6c9cbd85cb3e1d5055b2ec"
     },
     {
-      "path": "scripts\\deploy\\deploy-from-gallery.ps1",
+      "path": "scripts/deploy/deploy-from-gallery.ps1",
       "sizeBytes": 3299,
       "sha256": "0b7d5b9f98b32dbb47fde50e018c5a52740d300ef558b70edfdf9f9b03d57f83"
     },
     {
-      "path": "scripts\\deploy\\deploy-images.ps1",
+      "path": "scripts/deploy/deploy-images.ps1",
       "sizeBytes": 1407,
       "sha256": "ba96ab7f8cdcc0add2ec6065ef0d0221f2e0fa49d840d930c0d6157f719015cb"
     },
     {
-      "path": "scripts\\deploy\\README.md",
+      "path": "scripts/deploy/README.md",
       "sizeBytes": 1261,
       "sha256": "f6aab695729971c800849ad807ffd3b8982899b7d50f17ea2f177011fdf44645"
     },
     {
-      "path": "scripts\\identity\\check-secret-expiry.ps1",
+      "path": "scripts/identity/check-secret-expiry.ps1",
       "sizeBytes": 2169,
       "sha256": "3f6c87781532ec68f574de9e50886668f52627640f7824cca024b7beb5f60c39"
     },
     {
-      "path": "scripts\\identity\\configure-branch-protection.ps1",
+      "path": "scripts/identity/configure-branch-protection.ps1",
       "sizeBytes": 3312,
       "sha256": "ddfac11ee98f918cd25c809a39f92c9a88ba8d13e96a65270579ca1bff20c49a"
     },
     {
-      "path": "scripts\\identity\\set-admin-password.ps1",
+      "path": "scripts/identity/set-admin-password.ps1",
       "sizeBytes": 3998,
       "sha256": "984aaeac2569d54edcba102bd6fe1d7f168b663f52a550b0077521fb2a7de11a"
     },
     {
-      "path": "scripts\\identity\\setup-github-oidc.ps1",
+      "path": "scripts/identity/setup-github-oidc.ps1",
       "sizeBytes": 4812,
       "sha256": "da262461173baedaedf9e20b84a2b298202b5c569062d4ac8d20a1db66ec583a"
     },
     {
-      "path": "scripts\\image\\checksums.json",
+      "path": "scripts/image/checksums.json",
       "sizeBytes": 714,
       "sha256": "8f08ddc9e29121d16569857b3d0894a1c045dadf13c4fd1709342383c43f5014"
     },
     {
-      "path": "scripts\\image\\cis-check-linux.sh",
+      "path": "scripts/image/cis-check-linux.sh",
       "sizeBytes": 2830,
       "sha256": "5690e969044ae666b1e594281ef9fbd68e9ec8c0f07d83d9c0b79d13197f6378"
     },
     {
-      "path": "scripts\\image\\cis-check-windows.ps1",
+      "path": "scripts/image/cis-check-windows.ps1",
       "sizeBytes": 3376,
       "sha256": "27b7fb5a57a4a659ece6990495c4cace1c85650c8c4e8f7d9374d917f5ead7d7"
     },
     {
-      "path": "scripts\\image\\linux-packer.json",
+      "path": "scripts/image/linux-packer.json",
       "sizeBytes": 6554,
       "sha256": "b46b858ce4315202ac3023abed4151f607a04813c66bf9a08d4b21202f4b731a"
     },
     {
-      "path": "scripts\\image\\README.md",
+      "path": "scripts/image/README.md",
       "sizeBytes": 8214,
       "sha256": "184f805c55db0416ae0a1b206a0421f2269dac2788a39bfa8f1a64ba54a28eff"
     },
     {
-      "path": "scripts\\image\\update-checksums.ps1",
+      "path": "scripts/image/update-checksums.ps1",
       "sizeBytes": 2404,
       "sha256": "7856704029ce0d88bda8e3b7c8571818708cc45f66912fc4e94e23015cf042d5"
     },
     {
-      "path": "scripts\\image\\windows-packer.json",
+      "path": "scripts/image/windows-packer.json",
       "sizeBytes": 8055,
       "sha256": "46953fad3ea3de4ee695a609b99d510fc47d77c794a6ad62af557c779b46f02e"
     },
     {
-      "path": "scripts\\manifest\\update-agent-manifest.ps1",
-      "sizeBytes": 3842,
-      "sha256": "f4e2d195a18a37570e526d8bd9c84c4219ad872b69e684254e58cc33312d72ec"
+      "path": "scripts/manifest/update-agent-manifest.ps1",
+      "sizeBytes": 3841,
+      "sha256": "05ff47065fc863da139261dbd28a1dc32e8e4901ae53386e1d60b27590eb5e42"
     },
     {
-      "path": "scripts\\validate\\validate-base.ps1",
+      "path": "scripts/validate/validate-base.ps1",
       "sizeBytes": 4024,
       "sha256": "b7caf7aea0b37f5ee467f7e3a85a99cd5d2af6e2f28801ec3b601a2654ed99f5"
     },
     {
-      "path": "scripts\\verify-environment.ps1",
+      "path": "scripts/verify-environment.ps1",
       "sizeBytes": 9149,
       "sha256": "f4bda7f9ee67f1c8d7b4289a475160d739667b35ca3b996d6fe95eb129d6aa74"
     }
   ],
   "copilotAgents": [
     {
-      "path": ".github\\agents\\secret-history-cleanup.agent.md",
+      "path": ".github/agents/secret-history-cleanup.agent.md",
       "sizeBytes": 2329,
       "sha256": "869a7ada1d3631024245d709ee6e9b639d9079c34ae2344312d920f16cc63273"
     }
   ],
   "runnerImageTemplates": [
     {
-      "path": "scripts\\image\\linux-packer.json",
+      "path": "scripts/image/linux-packer.json",
       "variables": {
         "base_offer": "0001-com-ubuntu-server-jammy",
         "base_publisher": "Canonical",
@@ -143,7 +143,7 @@
       ]
     },
     {
-      "path": "scripts\\image\\windows-packer.json",
+      "path": "scripts/image/windows-packer.json",
       "variables": {
         "agent_root": "C:\\ado-agent",
         "agent_sha256": "PLACEHOLDER_WINDOWS_SHA256",

@@ -44,7 +44,7 @@ jobs:
           }
           ENVEOF
           fi
-          jq -r 'to_entries[] | "\(.key)=\(.value)"' env/dev.json >> $GITHUB_ENV
+          jq -r 'to_entries[] | "\(.key)=\(.value)"' env/dev.json >> "$GITHUB_ENV"
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
@@ -95,7 +95,7 @@ jobs:
           fi
 
           echo "::add-mask::$PW"
-          echo "value=$PW" >> $GITHUB_OUTPUT
+          echo "value=$PW" >> "$GITHUB_OUTPUT"
 
       - name: Deploy Base (what-if)
         run: |
@@ -134,8 +134,8 @@ jobs:
 
       - name: Post Summary
         run: |
-          echo "### Base Infrastructure Deployment" >> $GITHUB_STEP_SUMMARY
-          echo "Resource Group: $RESOURCE_GROUP" >> $GITHUB_STEP_SUMMARY
-          echo "Location: $LOCATION" >> $GITHUB_STEP_SUMMARY
-          echo "Use Gallery Images: ${{ github.event.inputs.useGalleryImages || 'false' }}" >> $GITHUB_STEP_SUMMARY
-          echo "Public IP for GH Runner: ${{ github.event.inputs.enableGhPublicIp || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Base Infrastructure Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "Resource Group: $RESOURCE_GROUP" >> "$GITHUB_STEP_SUMMARY"
+          echo "Location: $LOCATION" >> "$GITHUB_STEP_SUMMARY"
+          echo "Use Gallery Images: ${{ github.event.inputs.useGalleryImages || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Public IP for GH Runner: ${{ github.event.inputs.enableGhPublicIp || 'false' }}" >> "$GITHUB_STEP_SUMMARY"

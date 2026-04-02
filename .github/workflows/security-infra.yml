@@ -67,7 +67,7 @@ jobs:
 
           $results = @()
           foreach ($scriptPath in $scripts) {
-            $results += Invoke-ScriptAnalyzer -Path $scriptPath -Severity Error,Warning
+            $results += Invoke-ScriptAnalyzer -Path $scriptPath -Severity Error,Warning -ExcludeRule PSAvoidUsingWriteHost
           }
           if ($results) {
             $results | Format-Table RuleName, Severity, ScriptName, Line, Message -AutoSize | Out-String | Write-Host

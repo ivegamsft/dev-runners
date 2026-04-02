@@ -20,7 +20,7 @@ function Get-RelativePath {
     [string]$TargetPath
   )
 
-  [System.IO.Path]::GetRelativePath($BasePath, $TargetPath).Replace('/', '\\')
+  [System.IO.Path]::GetRelativePath($BasePath, $TargetPath).Replace('\', '/')
 }
 
 function Get-FileEntry {

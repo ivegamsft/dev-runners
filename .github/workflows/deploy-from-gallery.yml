@@ -48,7 +48,7 @@ jobs:
           }
           ENVEOF
           fi
-          jq -r 'to_entries[] | "\(.key)=\(.value)"' env/dev.json >> $GITHUB_ENV
+          jq -r 'to_entries[] | "\(.key)=\(.value)"' env/dev.json >> "$GITHUB_ENV"
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
@@ -67,12 +67,12 @@ jobs:
             echo "Missing gallery versions: linux='$LINUX_VER' windows='$WIN_VER'" >&2
             exit 1
           fi
-          echo "linux=$LINUX_VER" >> $GITHUB_OUTPUT
-          echo "windows=$WIN_VER" >> $GITHUB_OUTPUT
+          echo "linux=$LINUX_VER" >> "$GITHUB_OUTPUT"
+          echo "windows=$WIN_VER" >> "$GITHUB_OUTPUT"
           echo "Resolved linux=$LINUX_VER windows=$WIN_VER"
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
 
       - name: Verify Build Provenance
         shell: bash
@@ -131,8 +131,8 @@ jobs:
           fi
 
           echo "::add-mask::$PW"
-          echo "value=$PW" >> $GITHUB_OUTPUT
-          echo "keyVault=$KV_NAME" >> $GITHUB_OUTPUT
+          echo "value=$PW" >> "$GITHUB_OUTPUT"
+          echo "keyVault=$KV_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Create Params File
         shell: bash
@@ -172,6 +172,6 @@ jobs:
       - name: Output VM Resources
         run: |
           echo 'VM Scale Set:'
-          az vmss list -g $RESOURCE_GROUP --query "[].name" -o tsv || true
+          az vmss list -g "$RESOURCE_GROUP" --query "[].name" -o tsv || true
           echo 'VMs:'
-          az vm list -g $RESOURCE_GROUP --query "[].name" -o tsv || true
+          az vm list -g "$RESOURCE_GROUP" --query "[].name" -o tsv || true
