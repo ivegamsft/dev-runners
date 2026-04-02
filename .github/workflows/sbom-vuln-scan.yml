@@ -1,0 +1,56 @@
+name: SBOM and Vulnerability Scan
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - 'infra/**'
+      - '.github/workflows/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - 'infra/**'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  sbom-and-scan:
+    name: Build SBOM and Scan Filesystem
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cdx.json
+
+      - name: Install Trivy
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Run Trivy filesystem scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          trivy fs . --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1

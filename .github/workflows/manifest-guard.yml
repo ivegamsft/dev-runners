@@ -1,0 +1,45 @@
+name: Manifest Guard
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - '.github/agents/**'
+      - 'manifests/agent-manifest.json'
+      - '.github/workflows/manifest-guard.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - '.github/agents/**'
+      - 'manifests/agent-manifest.json'
+      - '.github/workflows/manifest-guard.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-manifest:
+    name: Verify Agent Manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Regenerate manifest
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          ./scripts/manifest/update-agent-manifest.ps1
+
+      - name: Ensure manifest is committed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --exit-code -- manifests/agent-manifest.json; then
+            echo "manifests/agent-manifest.json is out of date."
+            echo "Run: pwsh ./scripts/manifest/update-agent-manifest.ps1"
+            exit 1
+          fi

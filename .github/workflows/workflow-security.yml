@@ -1,0 +1,66 @@
+name: Workflow Security Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/**'
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    name: Lint GitHub Workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install and run actionlint
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest
+          ./actionlint -color
+
+  pin-check:
+    name: Check Action Pinning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail on unpinned third-party actions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Allow GitHub-maintained actions to stay on major tags.
+          ALLOWLIST='^(actions/|github/|azure/|hashicorp/)'
+          BAD=0
+
+          while IFS= read -r line; do
+            file=$(echo "$line" | cut -d: -f1)
+            ref=$(echo "$line" | sed -E 's/^.*uses:\s*//')
+            repo=$(echo "$ref" | cut -d@ -f1)
+            version=$(echo "$ref" | cut -d@ -f2)
+
+            if [[ "$repo" =~ $ALLOWLIST ]]; then
+              continue
+            fi
+
+            if [[ ! "$version" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "Unpinned third-party action in $file: $ref"
+              BAD=1
+            fi
+          done < <(grep -R -n -E "uses:\s*[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(@|/)" .github/workflows/*.yml || true)
+
+          if [[ $BAD -ne 0 ]]; then
+            echo "Pin third-party actions to full commit SHAs."
+            exit 1
+          fi

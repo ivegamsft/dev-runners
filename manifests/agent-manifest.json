@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Version-controlled inventory of scripts, Copilot custom agents, and runner image provisioning hints.",
+  "scripts": [
+    {
+      "path": "scripts\\deploy\\deploy-base.ps1",
+      "sizeBytes": 1731,
+      "sha256": "13cf1c11e8de153633e02ad4d3aaee12bc96426fc4bd658ca62b02e9601755fe"
+    },
+    {
+      "path": "scripts\\deploy\\deploy-from-gallery.ps1",
+      "sizeBytes": 3179,
+      "sha256": "e18a46213ef4620a2e438c1b62cb34ed57a163596f3c128294e5f52a471d159f"
+    },
+    {
+      "path": "scripts\\deploy\\deploy-images.ps1",
+      "sizeBytes": 1338,
+      "sha256": "0b81d0c841f46f83c3c3d5a68b7126c7c708a531b4d7d12b0755bd589a41f547"
+    },
+    {
+      "path": "scripts\\deploy\\README.md",
+      "sizeBytes": 1261,
+      "sha256": "f6aab695729971c800849ad807ffd3b8982899b7d50f17ea2f177011fdf44645"
+    },
+    {
+      "path": "scripts\\identity\\check-secret-expiry.ps1",
+      "sizeBytes": 2153,
+      "sha256": "5a050b9fa3de0490e17d205514c7b282e9298ba705ae7fc162b44c3db81637d1"
+    },
+    {
+      "path": "scripts\\identity\\configure-branch-protection.ps1",
+      "sizeBytes": 3322,
+      "sha256": "071a01c2d35137997cbf06c085f518c35981afce529281701834d336876c5443"
+    },
+    {
+      "path": "scripts\\identity\\set-admin-password.ps1",
+      "sizeBytes": 3978,
+      "sha256": "472f31eb5c2a86454bd2bbfba54fa67334d7cf0b9550b106c3a4ba4d3e22d734"
+    },
+    {
+      "path": "scripts\\identity\\setup-github-oidc.ps1",
+      "sizeBytes": 4760,
+      "sha256": "ed530d58889e13572524385f31bc70a2ee896d14cf237981583462d8b1fbbc6c"
+    },
+    {
+      "path": "scripts\\image\\checksums.json",
+      "sizeBytes": 714,
+      "sha256": "8f08ddc9e29121d16569857b3d0894a1c045dadf13c4fd1709342383c43f5014"
+    },
+    {
+      "path": "scripts\\image\\cis-check-linux.sh",
+      "sizeBytes": 2830,
+      "sha256": "5690e969044ae666b1e594281ef9fbd68e9ec8c0f07d83d9c0b79d13197f6378"
+    },
+    {
+      "path": "scripts\\image\\cis-check-windows.ps1",
+      "sizeBytes": 3376,
+      "sha256": "27b7fb5a57a4a659ece6990495c4cace1c85650c8c4e8f7d9374d917f5ead7d7"
+    },
+    {
+      "path": "scripts\\image\\linux-packer.json",
+      "sizeBytes": 6554,
+      "sha256": "b46b858ce4315202ac3023abed4151f607a04813c66bf9a08d4b21202f4b731a"
+    },
+    {
+      "path": "scripts\\image\\README.md",
+      "sizeBytes": 8214,
+      "sha256": "184f805c55db0416ae0a1b206a0421f2269dac2788a39bfa8f1a64ba54a28eff"
+    },
+    {
+      "path": "scripts\\image\\update-checksums.ps1",
+      "sizeBytes": 2404,
+      "sha256": "7856704029ce0d88bda8e3b7c8571818708cc45f66912fc4e94e23015cf042d5"
+    },
+    {
+      "path": "scripts\\image\\windows-packer.json",
+      "sizeBytes": 8055,
+      "sha256": "46953fad3ea3de4ee695a609b99d510fc47d77c794a6ad62af557c779b46f02e"
+    },
+    {
+      "path": "scripts\\manifest\\update-agent-manifest.ps1",
+      "sizeBytes": 3842,
+      "sha256": "f4e2d195a18a37570e526d8bd9c84c4219ad872b69e684254e58cc33312d72ec"
+    },
+    {
+      "path": "scripts\\validate\\validate-base.ps1",
+      "sizeBytes": 3286,
+      "sha256": "89ecebeccd61d61659b072824101051ff9491590e696c6763a9e71ea2d83497d"
+    }
+  ],
+  "copilotAgents": [
+    {
+      "path": ".github\\agents\\secret-history-cleanup.agent.md",
+      "sizeBytes": 2329,
+      "sha256": "869a7ada1d3631024245d709ee6e9b639d9079c34ae2344312d920f16cc63273"
+    }
+  ],
+  "runnerImageTemplates": [
+    {
+      "path": "scripts\\image\\linux-packer.json",
+      "variables": {
+        "base_offer": "0001-com-ubuntu-server-jammy",
+        "base_publisher": "Canonical",
+        "base_sku": "22_04-lts",
+        "gallery_image_definition": "linux-agent",
+        "gallery_image_version": "{{env `GALLERY_VERSION`}}",
+        "gallery_name": "{{env `GALLERY_NAME`}}",
+        "gallery_rg": "{{env `GALLERY_RG`}}",
+        "location": "{{env `PACKER_LOCATION`}}",
+        "managed_image_name": "linux-github-runner",
+        "managed_image_rg": "{{env `PACKER_IMAGE_RG`}}",
+        "runner_sha256": "PLACEHOLDER_LINUX_SHA256",
+        "runner_user": "ghrunner",
+        "runner_version": "2.317.0",
+        "tag_env": "{{env `ENV`}}",
+        "tag_org": "{{env `ORG`}}",
+        "tag_role": "github-runner",
+        "temp_rg": "{{env `PACKER_TEMP_RG`}}",
+        "vm_size": "{{env `PACKER_VM_SIZE`}}"
+      },
+      "installHints": [
+        "sudo apt-get install -y jq git curl zip unzip tar bash libicu-dev build-essential python3 python3-pip",
+        "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -",
+        "sudo apt-get install -y nodejs",
+        "curl -L -o actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz",
+        "echo '{{user `runner_sha256`}}  actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz' | sha256sum -c -",
+        "tar xzf actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+      ]
+    },
+    {
+      "path": "scripts\\image\\windows-packer.json",
+      "variables": {
+        "agent_root": "C:\\ado-agent",
+        "agent_sha256": "PLACEHOLDER_WINDOWS_SHA256",
+        "agent_user": "NT AUTHORITY\\SYSTEM",
+        "agent_version": "3.240.1",
+        "base_offer": "WindowsServer",
+        "base_publisher": "MicrosoftWindowsServer",
+        "base_sku": "2022-datacenter-azure-edition",
+        "gallery_image_definition": "windows-agent",
+        "gallery_image_version": "{{env `GALLERY_VERSION`}}",
+        "gallery_name": "{{env `GALLERY_NAME`}}",
+        "gallery_rg": "{{env `GALLERY_RG`}}",
+        "location": "{{env `PACKER_LOCATION`}}",
+        "managed_image_name": "windows-ado-agent",
+        "managed_image_rg": "{{env `PACKER_IMAGE_RG`}}",
+        "tag_env": "{{env `ENV`}}",
+        "tag_org": "{{env `ORG`}}",
+        "tag_role": "ado-agent",
+        "temp_rg": "{{env `PACKER_TEMP_RG`}}",
+        "vm_size": "{{env `PACKER_VM_SIZE`}}"
+      },
+      "installHints": [
+        "Install-Module -Name Az -Force -AllowClobber",
+        "Invoke-WebRequest https://aka.ms/installazd.ps1 -OutFile installazd.ps1; ./installazd.ps1",
+        "choco install git -y",
+        "choco install nodejs-lts -y",
+        "choco install visualstudio2022buildtools -y --package-parameters '--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --passive --locale en-US'",
+        "choco install azure-cli -y",
+        "choco install cmake -y",
+        "choco install python --version=3.12.3 -y",
+        "Invoke-WebRequest -UseBasicParsing -Uri https://vstsagentpackage.azureedge.net/agent/$agentVersion/vsts-agent-win-x64-$agentVersion.zip -OutFile agent.zip"
+      ]
+    }
+  ]
+}
