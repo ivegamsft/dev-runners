@@ -49,8 +49,8 @@
     },
     {
       "path": "scripts\\identity\\setup-github-oidc.ps1",
-      "sizeBytes": 4806,
-      "sha256": "6a1c97b6a36304780bed633d24b627d852d5f191698c32f9d961f7d47b8be8dc"
+      "sizeBytes": 4812,
+      "sha256": "da262461173baedaedf9e20b84a2b298202b5c569062d4ac8d20a1db66ec583a"
     },
     {
       "path": "scripts\\image\\checksums.json",

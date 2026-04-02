@@ -64,7 +64,7 @@ function Write-Info($m){ Write-Host $m -ForegroundColor Cyan }
 function Write-Warn($m){ Write-Host $m -ForegroundColor Yellow }
 
 Write-Info 'Resolving existing application...'
-$appMatches = az ad app list --display-name $DisplayName -o json | ConvertFrom-Json
+$appMatches = @(az ad app list --display-name $DisplayName -o json | ConvertFrom-Json)
 if ($appMatches.Count -gt 1) {
   Write-Host "ERROR: Multiple applications match display name '$DisplayName':" -ForegroundColor Red
   $appMatches | ForEach-Object { Write-Host "  appId=$($_.appId)  id=$($_.id)  displayName=$($_.displayName)" -ForegroundColor Red }
@@ -104,7 +104,7 @@ $tmp = New-TemporaryFile
   issuer = 'https://token.actions.githubusercontent.com'
   subject = $Subject
   audiences = @($Audience)
-} | ConvertTo-Json | Out-File $tmp -Encoding utf8
+} | ConvertTo-Json | Set-Content $tmp -Encoding utf8
 
 Write-Info 'Creating federated credential'
 az ad app federated-credential create --id $appId --parameters @$tmp | Out-Null
