@@ -16,7 +16,9 @@ Provide (via parameters file or CLI):
 
 ## Usage
 ```
-az deployment group create -g <rg> -f infra/deploy/main.bicep -p @infra/deploy/parameters.dev.json
+cp infra/deploy/parameters.sample.json infra/deploy/parameters.local.json
+# Edit parameters.local.json with your values
+az deployment group create -g <rg> -f infra/deploy/main.bicep -p @infra/deploy/parameters.local.json
 ```
 
-`parameters.dev.json` should be derived from `parameters.sample.json` and filled with actual gallery version numbers output by your build pipeline.
+`parameters.local.json` should be derived from `parameters.sample.json` and filled with actual gallery version numbers output by your build pipeline. Local parameter files are gitignored.

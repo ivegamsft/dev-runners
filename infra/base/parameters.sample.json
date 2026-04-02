@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "org":            { "value": "<your-org>" },
+    "env":            { "value": "<environment>" },
+    "location":       { "value": "<azure-region>" },
+    "loc":            { "value": "<short-region-code>" },
+    "uniqueSuffix":   { "value": "<unique-3-to-12-chars>" },
+    "adminUsername":   { "value": "<vm-admin-username>" },
+    "adminSshPublicKey": { "value": "<ssh-public-key>" },
+    "linuxUsePassword": { "value": false },
+    "linuxVmSize":    { "value": "Standard_D4s_v5" },
+    "windowsVmSize":  { "value": "Standard_D4s_v5" },
+    "enableGhPublicIp": { "value": false },
+    "keyVaultSku":    { "value": "standard" },
+    "vnetAddressSpace": { "value": "10.20.0.0/16" },
+    "subnetAgentsCidr": { "value": "10.20.1.0/24" },
+    "linuxImageDefinitionName":  { "value": "linux-agent" },
+    "windowsImageDefinitionName": { "value": "windows-agent" },
+    "linuxImageVersion":  { "value": "latest" },
+    "windowsImageVersion": { "value": "latest" },
+    "useGalleryImages": { "value": false },
+    "createGallery":  { "value": true }
+  }
+}

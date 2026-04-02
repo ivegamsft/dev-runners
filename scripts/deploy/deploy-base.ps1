@@ -3,7 +3,7 @@ param(
   [string]$SubscriptionId,
   [string]$ResourceGroup,
   [string]$Location,
-  [string]$ParametersFile = '..\..\infra\base\parameters.dev.json',
+  [string]$ParametersFile = '..\..\infra\base\parameters.local.json',
   [switch]$WhatIf
 )
 

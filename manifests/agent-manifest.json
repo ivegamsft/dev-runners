@@ -4,8 +4,8 @@
   "scripts": [
     {
       "path": "scripts\\deploy\\deploy-base.ps1",
-      "sizeBytes": 1731,
-      "sha256": "13cf1c11e8de153633e02ad4d3aaee12bc96426fc4bd658ca62b02e9601755fe"
+      "sizeBytes": 1733,
+      "sha256": "07a998559e932abcda74fb7a225b4c3b03dfb0045880b9020fdadbd065e3bc62"
     },
     {
       "path": "scripts\\deploy\\deploy-from-gallery.ps1",
@@ -14,8 +14,8 @@
     },
     {
       "path": "scripts\\deploy\\deploy-images.ps1",
-      "sizeBytes": 1338,
-      "sha256": "0b81d0c841f46f83c3c3d5a68b7126c7c708a531b4d7d12b0755bd589a41f547"
+      "sizeBytes": 1340,
+      "sha256": "a514d8c49c67fcbaab30272feb6cd6025ac4e8cdae942ca6055ac8827c98a826"
     },
     {
       "path": "scripts\\deploy\\README.md",
@@ -34,8 +34,8 @@
     },
     {
       "path": "scripts\\identity\\set-admin-password.ps1",
-      "sizeBytes": 3978,
-      "sha256": "472f31eb5c2a86454bd2bbfba54fa67334d7cf0b9550b106c3a4ba4d3e22d734"
+      "sizeBytes": 3980,
+      "sha256": "deaf90cc404ae226621d82ca23bb3560f01c0452e91c96800eb124026174185e"
     },
     {
       "path": "scripts\\identity\\setup-github-oidc.ps1",

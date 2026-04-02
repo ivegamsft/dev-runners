@@ -14,3 +14,9 @@ output-*/
 
 # Node
 node_modules/
+
+# Local environment config (copy from sample files and fill in your values)
+env/dev.json
+env/*.local.json
+infra/*/parameters.dev.json
+infra/*/parameters.local.json

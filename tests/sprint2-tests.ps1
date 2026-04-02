@@ -29,13 +29,13 @@ function Assert-Test {
 }
 
 # ─── Load file contents ──────────────────────────────────────────────────────
-$envConfigPath   = Join-Path $repoRoot 'env\dev.json'
+$envSamplePath   = Join-Path $repoRoot 'env\sample.json'
 $buildImagesYml  = Get-Content (Join-Path $repoRoot '.github\workflows\build-images.yml') -Raw
 $deployBaseYml   = Get-Content (Join-Path $repoRoot '.github\workflows\deploy-base.yml') -Raw
 $deployGalleryYml = Get-Content (Join-Path $repoRoot '.github\workflows\deploy-from-gallery.yml') -Raw
 $securityInfraYml = Get-Content (Join-Path $repoRoot '.github\workflows\security-infra.yml') -Raw
 $mainBicep       = Get-Content (Join-Path $repoRoot 'infra\base\main.bicep') -Raw
-$paramsDev       = Get-Content (Join-Path $repoRoot 'infra\base\parameters.dev.json') -Raw
+$paramsSample    = Get-Content (Join-Path $repoRoot 'infra\base\parameters.sample.json') -Raw
 $validatePs1     = Get-Content (Join-Path $repoRoot 'scripts\validate\validate-base.ps1') -Raw
 $oidcPs1         = Get-Content (Join-Path $repoRoot 'scripts\identity\setup-github-oidc.ps1') -Raw
 $deployBasePs1   = Get-Content (Join-Path $repoRoot 'scripts\deploy\deploy-base.ps1') -Raw
@@ -44,23 +44,23 @@ $deployImagesPs1 = Get-Content (Join-Path $repoRoot 'scripts\deploy\deploy-image
 # ─── Issue #11: Centralized environment config ───────────────────────────────
 Write-Host "`n=== Issue #11: Centralized environment config ===" -ForegroundColor Cyan
 
-# Positive: env/dev.json exists and is valid JSON
+# Positive: env/sample.json exists and is valid JSON
 Assert-Test `
-  'env/dev.json exists' `
-  (Test-Path $envConfigPath) `
-  'env/dev.json not found'
+  'env/sample.json exists' `
+  (Test-Path $envSamplePath) `
+  'env/sample.json not found'
 
 $envConfig = $null
-if (Test-Path $envConfigPath) {
-  try { $envConfig = Get-Content $envConfigPath -Raw | ConvertFrom-Json } catch { }
+if (Test-Path $envSamplePath) {
+  try { $envConfig = Get-Content $envSamplePath -Raw | ConvertFrom-Json } catch { }
 }
 
 Assert-Test `
-  'env/dev.json is valid JSON' `
+  'env/sample.json is valid JSON' `
   ($null -ne $envConfig) `
-  'env/dev.json could not be parsed as JSON'
+  'env/sample.json could not be parsed as JSON'
 
-# Positive: env/dev.json has required keys
+# Positive: env/sample.json has required keys
 $requiredKeys = @('ORG','ENV','LOCATION','LOC','UNIQUE_SUFFIX','RESOURCE_GROUP','GALLERY_NAME','ADMIN_USERNAME')
 $missingKeys = @()
 if ($envConfig) {
@@ -69,7 +69,7 @@ if ($envConfig) {
   }
 }
 Assert-Test `
-  'env/dev.json has all required keys' `
+  'env/sample.json has all required keys' `
   ($missingKeys.Count -eq 0) `
   "Missing keys: $($missingKeys -join ', ')"
 
@@ -116,11 +116,11 @@ Assert-Test `
 # ─── Issue #12: Validation logic mismatch ────────────────────────────────────
 Write-Host "`n=== Issue #12: Validation logic mismatch ===" -ForegroundColor Cyan
 
-# Positive: parameters.dev.json has linuxUsePassword=false
+# Positive: parameters.sample.json has linuxUsePassword=false
 Assert-Test `
-  'parameters.dev.json has linuxUsePassword=false' `
-  ($paramsDev -match '"linuxUsePassword".*"value":\s*false') `
-  'linuxUsePassword is not false in parameters.dev.json'
+  'parameters.sample.json has linuxUsePassword=false' `
+  ($paramsSample -match '"linuxUsePassword".*"value":\s*false') `
+  'linuxUsePassword is not false in parameters.sample.json'
 
 # Positive: validator accepts configurable password auth expectation
 Assert-Test `
@@ -172,11 +172,11 @@ Assert-Test `
   ($mainBicep -match '@minLength\(16\)\s*\r?\nparam adminPassword') `
   'adminPassword missing @minLength(16) decorator'
 
-# Negative: parameters.dev.json does NOT contain empty adminPassword
+# Negative: parameters.sample.json does NOT contain adminPassword
 Assert-Test `
-  'parameters.dev.json does not have empty adminPassword' `
-  (-not ($paramsDev -match '"adminPassword"')) `
-  'parameters.dev.json still has adminPassword entry (should be provided at deploy time)'
+  'parameters.sample.json does not have adminPassword' `
+  (-not ($paramsSample -match '"adminPassword"')) `
+  'parameters.sample.json still has adminPassword entry (should be provided at deploy time)'
 
 # Positive: deploy-base.yml generates password dynamically
 Assert-Test `

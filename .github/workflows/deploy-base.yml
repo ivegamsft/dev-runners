@@ -27,6 +27,23 @@ jobs:
       - name: Load environment config
         shell: bash
         run: |
+          if [ ! -f env/dev.json ]; then
+            mkdir -p env
+            cat > env/dev.json <<ENVEOF
+          {
+            "ORG": "${{ vars.ORG }}",
+            "ENV": "${{ vars.ENV }}",
+            "LOCATION": "${{ vars.LOCATION }}",
+            "LOC": "${{ vars.LOC }}",
+            "UNIQUE_SUFFIX": "${{ vars.UNIQUE_SUFFIX }}",
+            "RESOURCE_GROUP": "${{ vars.RESOURCE_GROUP }}",
+            "GALLERY_NAME": "${{ vars.GALLERY_NAME }}",
+            "PACKER_TEMP_RG": "${{ vars.PACKER_TEMP_RG }}",
+            "PACKER_VM_SIZE": "${{ vars.PACKER_VM_SIZE }}",
+            "ADMIN_USERNAME": "${{ vars.ADMIN_USERNAME }}"
+          }
+          ENVEOF
+          fi
           jq -r 'to_entries[] | "\(.key)=\(.value)"' env/dev.json >> $GITHUB_ENV
 
       - name: Azure Login (OIDC)

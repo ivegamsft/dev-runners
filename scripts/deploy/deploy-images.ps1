@@ -2,7 +2,7 @@ param(
   [string]$EnvConfig,
   [string]$SubscriptionId,
   [string]$ResourceGroup,
-  [string]$ParametersFile = '..\..\infra\images\parameters.dev.json',
+  [string]$ParametersFile = '..\..\infra\images\parameters.local.json',
   [switch]$WhatIf
 )
 

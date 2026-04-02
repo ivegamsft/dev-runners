@@ -94,7 +94,12 @@ pwsh ./tests/sprint1-tests.ps1 && pwsh ./tests/sprint2-tests.ps1 && pwsh ./tests
 
 ### Environment Config
 
-`env/dev.json` is the single source of truth for environment-specific values. Workflows load it via `jq` into `$GITHUB_ENV`; scripts load it via an `$EnvConfig` parameter. To add a new environment, create `env/<name>.json`.
+`env/sample.json` is the checked-in template. Copy it to `env/dev.json` (gitignored) and fill in your values. Workflows generate `env/dev.json` from GitHub Repository Variables when the file is absent.
+
+**Required GitHub Repository Variables** (Settings → Secrets and variables → Variables):
+`ORG`, `ENV`, `LOCATION`, `LOC`, `UNIQUE_SUFFIX`, `RESOURCE_GROUP`, `GALLERY_NAME`, `PACKER_TEMP_RG`, `PACKER_VM_SIZE`, `ADMIN_USERNAME`.
+
+Similarly, copy `infra/*/parameters.sample.json` to `parameters.local.json` for local script execution. Local param files are gitignored.
 
 ### Network Security
 

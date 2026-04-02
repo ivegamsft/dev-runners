@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "org":            { "value": "<your-org>" },
+    "env":            { "value": "<environment>" },
+    "location":       { "value": "<azure-region>" },
+    "loc":            { "value": "<short-region-code>" },
+    "uniqueSuffix":   { "value": "<unique-3-to-12-chars>" },
+    "galleryName":    { "value": "<gallery-name>" },
+    "linuxImageDefinitionName":  { "value": "linux-agent" },
+    "windowsImageDefinitionName": { "value": "windows-agent" }
+  }
+}

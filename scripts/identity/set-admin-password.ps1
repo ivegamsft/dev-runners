@@ -4,7 +4,7 @@ param(
   [string]$KeyVaultName,
   [string]$SecretName = 'admin-password',
   [string]$Password,
-  [string]$ParametersFile = '..\..\infra\base\parameters.dev.json',
+  [string]$ParametersFile = '..\..\infra\base\parameters.local.json',
   [int]$Length = 24,
   [switch]$ForceRotate,
   [switch]$ShowPassword
