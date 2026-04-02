@@ -241,7 +241,7 @@ resource vmssAdo 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
         adminUsername: adminUsername
         // Provide an admin password only when password auth is enabled
         ...(linuxUsePassword ? {
-          adminPassword: empty(adminPassword) ? fallbackAdminPassword : adminPassword
+          adminPassword: adminPassword
         } : {})
         linuxConfiguration: linuxUsePassword ? {
           disablePasswordAuthentication: false
@@ -335,7 +335,7 @@ resource ghVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
     osProfile: {
       computerName: ghComputerName
       adminUsername: adminUsername
-  adminPassword: empty(adminPassword) ? fallbackAdminPassword : adminPassword
+      adminPassword: adminPassword
       windowsConfiguration: {
         enableAutomaticUpdates: true
       }
@@ -377,17 +377,10 @@ resource kvRoleGh 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 }
 // Removed deployment role assignment (Secrets Officer) no longer needed.
 
-// Deployment script to generate password secret
-// Deterministic password (bootstrap only). Replace/rotate after first deployment.
-var pwSeg1 = toLower(substring(uniqueString(resourceGroup().id, uniqueSuffix), 0, 6))
-var pwSeg2 = toUpper(substring(uniqueString(subscription().id, location), 0, 4))
-var pwSeg3 = substring(replace(guid(resourceGroup().id, uniqueSuffix), '-', ''), 0, 6)
 @secure()
 @description('Admin password for Windows VM (supply via parameters file or Key Vault ref).')
+@minLength(16)
 param adminPassword string
-
-// Fallback generation if adminPassword not supplied (not used when parameter provided)
-var fallbackAdminPassword = '${pwSeg2}!${pwSeg1}${pwSeg3}Aa1!'
 
 // Optionally create admin password secret if provided
 resource kvSecretAdminPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(adminPassword)) {

@@ -3,7 +3,8 @@ param(
   [string]$ResourceGroup,
   [string]$ExpectedOrg = 'acme',
   [string]$ExpectedEnv = 'dev',
-  [string]$ExpectedLoc = 'sec'
+  [string]$ExpectedLoc = 'sec',
+  [bool]$ExpectLinuxPasswordAuthDisabled = $true
 )
 
 if (-not $SubscriptionId -or -not $ResourceGroup) {
@@ -43,7 +44,7 @@ Assert-OrFail ($gallery) 'Compute Gallery missing.'
 
 # Identities
 $ids = az resource list -g $ResourceGroup --resource-type Microsoft.ManagedIdentity/userAssignedIdentities -o json | ConvertFrom-Json
-foreach ($expected in 'lin-agents','win-agents','gh-runner','deploy') {
+foreach ($expected in 'lin-agents','win-agents','gh-runner') {
   $match = $ids | Where-Object { $_.name -like "*-$expected" }
   Assert-OrFail ($match) "User-assigned identity *-$expected missing."
 }
@@ -52,8 +53,8 @@ foreach ($expected in 'lin-agents','win-agents','gh-runner','deploy') {
 $vmss = az vmss list -g $ResourceGroup --query '[0]' -o json | ConvertFrom-Json
 Assert-OrFail ($vmss) 'VM Scale Set missing.'
 if ($vmss) {
-  $hasPasswordAuth = $vmss.virtualMachineProfile.osProfile.linuxConfiguration.disablePasswordAuthentication
-  Assert-OrFail ($hasPasswordAuth -eq $true) 'Linux VMSS should have password auth disabled.'
+  $passwordAuthDisabled = [bool]$vmss.virtualMachineProfile.osProfile.linuxConfiguration.disablePasswordAuthentication
+  Assert-OrFail ($passwordAuthDisabled -eq $ExpectLinuxPasswordAuthDisabled) "Linux VMSS password auth disabled expected $ExpectLinuxPasswordAuthDisabled got $passwordAuthDisabled"
 }
 
 # Windows VM

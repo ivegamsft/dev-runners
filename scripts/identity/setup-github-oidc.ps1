@@ -63,11 +63,17 @@ function Write-Info($m){ Write-Host $m -ForegroundColor Cyan }
 function Write-Warn($m){ Write-Host $m -ForegroundColor Yellow }
 
 Write-Info 'Resolving existing application...'
-$existing = az ad app list --display-name $DisplayName --query '[0]' -o json | ConvertFrom-Json
-if(-not $existing){
+$matches = az ad app list --display-name $DisplayName -o json | ConvertFrom-Json
+if ($matches.Count -gt 1) {
+  Write-Host "ERROR: Multiple applications match display name '$DisplayName':" -ForegroundColor Red
+  $matches | ForEach-Object { Write-Host "  appId=$($_.appId)  id=$($_.id)  displayName=$($_.displayName)" -ForegroundColor Red }
+  throw "Ambiguous match: $($matches.Count) applications found for '$DisplayName'. Specify a unique DisplayName or use Azure Portal to resolve duplicates."
+}
+$existing = $matches | Select-Object -First 1
+if (-not $existing) {
   Write-Info 'Creating application registration'
   $existing = az ad app create --display-name $DisplayName -o json | ConvertFrom-Json
-} else { Write-Info 'Application already exists (idempotent)'}
+} else { Write-Info 'Application already exists (idempotent)' }
 
 $appId = $existing.appId
 $appObjectId = $existing.id

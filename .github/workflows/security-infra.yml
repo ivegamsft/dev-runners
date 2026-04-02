@@ -65,7 +65,10 @@ jobs:
             exit 0
           }
 
-          $results = Invoke-ScriptAnalyzer -Path $scripts -Severity Error,Warning
+          $results = @()
+          foreach ($scriptPath in $scripts) {
+            $results += Invoke-ScriptAnalyzer -Path $scriptPath -Severity Error,Warning
+          }
           if ($results) {
             $results | Format-Table RuleName, Severity, ScriptName, Line, Message -AutoSize | Out-String | Write-Host
             throw "PSScriptAnalyzer found $($results.Count) issues."

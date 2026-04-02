@@ -32,5 +32,6 @@ Stored in Key Vault:
 - ado-pat
 - gh-runner-token
 - agent-registration-shared (optional)
+- admin-password
 
 Access via managed identity with Key Vault access policies / RBAC.
