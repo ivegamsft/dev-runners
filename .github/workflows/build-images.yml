@@ -123,6 +123,14 @@ jobs:
         run: |
           az sig image-version show -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition ${{ matrix.definition }} --gallery-image-version $GALLERY_VERSION --query "{name:name,publishDate:publishingProfile.publishedDate}" -o json || true
 
+      - name: Upload CIS Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cis-report-${{ matrix.image }}
+          path: cis-report-*.json
+          if-no-files-found: ignore
+
       - name: Upload Build Metadata
         uses: actions/upload-artifact@v4
         with:
