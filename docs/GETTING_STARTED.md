@@ -94,8 +94,12 @@ pwsh scripts/identity/setup-github-oidc.ps1 `
   -GitHubOrg yourorg `
   -GitHubRepo dev-runners `
   -ResourceGroup rg-myorg-dev-eus2 `
-  -Roles Contributor
+  -Roles Contributor,'User Access Administrator'
 ```
+
+> **Why User Access Administrator?** The Bicep template creates RBAC role assignments
+> (Key Vault Secrets User for managed identities). `Contributor` alone cannot write
+> role assignments — `User Access Administrator` is required.
 
 ## Deployment Flow
 
@@ -142,18 +146,18 @@ The verify script checks:
 # Preview what would be deleted
 pwsh scripts/cleanup.ps1 `
   -SubscriptionId 00000000-... `
-  -Org myorg -Env dev -Loc eus2 `
+  -Org myorg -Env dev -Loc eus2 -UniqueSuffix a1b2 `
   -WhatIf
 
-# Delete Azure resources only
+# Delete Azure resources + purge soft-deleted Key Vault
 pwsh scripts/cleanup.ps1 `
   -SubscriptionId 00000000-... `
-  -Org myorg -Env dev -Loc eus2
+  -Org myorg -Env dev -Loc eus2 -UniqueSuffix a1b2
 
 # Full cleanup (Azure + OIDC app + GitHub config)
 pwsh scripts/cleanup.ps1 `
   -SubscriptionId 00000000-... `
-  -Org myorg -Env dev -Loc eus2 `
+  -Org myorg -Env dev -Loc eus2 -UniqueSuffix a1b2 `
   -GitHubRepo yourorg/dev-runners `
   -IncludeOidc -IncludeGitHub -Force
 ```

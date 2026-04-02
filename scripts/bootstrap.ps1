@@ -297,7 +297,7 @@ if ($WhatIf) {
     -GitHubRepo $ghRepo `
     -Branch main `
     -ResourceGroup $resourceGroup `
-    -Roles Contributor | ConvertFrom-Json
+    -Roles Contributor,'User Access Administrator' | ConvertFrom-Json
 
   $clientId = $oidcResult.appId
   $tenantId = (az account show --query tenantId -o tsv)

@@ -4,13 +4,13 @@
   "scripts": [
     {
       "path": "scripts\\bootstrap.ps1",
-      "sizeBytes": 15652,
-      "sha256": "15d18bb8445e8c70ddd2c2c148f16dc3e85fe603de3ccb71b82568094427ba26"
+      "sizeBytes": 15680,
+      "sha256": "0034a0ff252d6c847f415fedf37b266f67d15019d3c40dc9291cc6043fdf4135"
     },
     {
       "path": "scripts\\cleanup.ps1",
-      "sizeBytes": 9029,
-      "sha256": "4d335fc02116ca977564057804a15bed0b099f275faeee58fdd9f108fb1420ce"
+      "sizeBytes": 10650,
+      "sha256": "fdcc401623e942b7a5239d5ca466d059a44c9226466b1fe404018c4711657272"
     },
     {
       "path": "scripts\\deploy\\deploy-base.ps1",

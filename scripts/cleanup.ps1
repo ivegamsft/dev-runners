@@ -37,6 +37,10 @@
 .PARAMETER IncludePackerRg
   Also delete the Packer temp resource group.
 
+.PARAMETER UniqueSuffix
+  Optional unique suffix to precisely identify the Key Vault for soft-delete purge.
+  If omitted, matches all soft-deleted vaults with the kv{org}{env}{loc} prefix.
+
 .PARAMETER Force
   Skip confirmation prompts.
 
@@ -55,6 +59,7 @@ param(
   [Parameter(Mandatory)][string]$Org,
   [Parameter(Mandatory)][string]$Env,
   [Parameter(Mandatory)][string]$Loc,
+  [string]$UniqueSuffix,
   [string]$GitHubRepo,
   [switch]$IncludeOidc,
   [switch]$IncludeGitHub,
@@ -118,6 +123,33 @@ if ($WhatIf) {
     Write-Removed $resourceGroup
   } else {
     Write-Skip "Resource group $resourceGroup not found"
+  }
+}
+
+# ─── 2b. Handle soft-deleted Key Vault ─────────────────────────────────────────
+Write-Step '2b. Handling soft-deleted Key Vault (prevents redeploy conflicts)'
+$kvPrefix = "kv$Org$Env$Loc"
+if ($UniqueSuffix) { $kvPrefix = "kv$Org$Env$Loc$UniqueSuffix" }
+
+if ($WhatIf) {
+  Write-Skip "Would check for soft-deleted vaults matching '$kvPrefix*'"
+} else {
+  $deletedVaults = @(az keyvault list-deleted --query "[?starts_with(name, '$kvPrefix')]" -o json 2>$null | ConvertFrom-Json)
+  if ($deletedVaults.Count -gt 0) {
+    foreach ($vault in $deletedVaults) {
+      $vaultName = $vault.name
+      # Try purge first; if purge protection is enabled, inform the user
+      Write-Host "    Attempting to purge soft-deleted vault: $vaultName" -ForegroundColor Yellow
+      $purgeResult = az keyvault purge --name $vaultName --no-wait 2>&1
+      if ($LASTEXITCODE -eq 0) {
+        Write-Removed "Purged soft-deleted Key Vault: $vaultName"
+      } else {
+        Write-Host "    Purge blocked (purge protection enabled). The deploy workflow will auto-recover it." -ForegroundColor Yellow
+        Write-Host "    To redeploy immediately, run: az keyvault recover --name $vaultName" -ForegroundColor Yellow
+      }
+    }
+  } else {
+    Write-Ok "No soft-deleted vaults matching '$kvPrefix*'"
   }
 }
 

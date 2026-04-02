@@ -57,6 +57,15 @@ jobs:
         run: |
           az group create -n "$RESOURCE_GROUP" -l "$LOCATION" --tags system=build-agents
 
+      - name: Recover soft-deleted Key Vault (if exists)
+        run: |
+          KV_NAME="kv${ORG}${ENV}${LOC}${UNIQUE_SUFFIX}"
+          DELETED=$(az keyvault list-deleted --query "[?name=='${KV_NAME}'].name" -o tsv 2>/dev/null || true)
+          if [ -n "$DELETED" ]; then
+            echo "Recovering soft-deleted Key Vault: $KV_NAME"
+            az keyvault recover --name "$KV_NAME" || true
+          fi
+
       - name: Validate Bicep Parameters
         run: |
           echo "ORG=$ORG ENV=$ENV LOC=$LOC UNIQUE_SUFFIX=$UNIQUE_SUFFIX" | sed 's/\r//' 
