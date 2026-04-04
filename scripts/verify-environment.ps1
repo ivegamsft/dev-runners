@@ -75,7 +75,7 @@ Assert-Check 'Local base parameters.local.json exists' (Test-Path $baseLocalPath
 # ─── Offline: Static tests ───────────────────────────────────────────────────
 Write-Section 'Static regression tests'
 
-$testFiles = @('tests\sprint1-tests.ps1', 'tests\sprint2-tests.ps1', 'tests\sprint3-tests.ps1', 'tests\parameter-tests.ps1')
+$testFiles = @('tests\sprint1-tests.ps1', 'tests\sprint2-tests.ps1', 'tests\sprint3-tests.ps1', 'tests\parameter-tests.ps1', 'tests\agent-smoke-tests.ps1')
 $allTestsPass = $true
 foreach ($tf in $testFiles) {
   $testPath = Join-Path $repoRoot $tf
@@ -180,6 +180,37 @@ if ($SkipAzure) {
       Write-Section 'Azure: NSG'
       $nsg = az resource list -g $ResourceGroup --resource-type Microsoft.Network/networkSecurityGroups --query '[0]' -o json 2>$null | ConvertFrom-Json
       Assert-Check 'NSG deployed' ($null -ne $nsg) 'No NSG found'
+
+      # ─── Online: Agent registration ─────────────────────────────────────────
+      Write-Section 'Azure: Agent verification'
+      $verifyAgentsScript = Join-Path $PSScriptRoot 'validate\verify-agents.ps1'
+      if (Test-Path $verifyAgentsScript) {
+        # Load ADO/GH config from env
+        $agentAdoUrl = $null
+        $agentGhRepo = $null
+        if (Test-Path $EnvConfig) {
+          $agentCfg = Get-Content $EnvConfig -Raw | ConvertFrom-Json
+          $agentAdoUrl = $agentCfg.ADO_ORG_URL
+          $agentGhRepo = $agentCfg.GITHUB_REPO
+        }
+        if ($agentAdoUrl -or $agentGhRepo) {
+          try {
+            $agentArgs = @('-File', $verifyAgentsScript, '-SubscriptionId', $SubscriptionId, '-ResourceGroup', $ResourceGroup)
+            if ($agentAdoUrl)  { $agentArgs += @('-AdoOrgUrl', $agentAdoUrl) }
+            if ($agentGhRepo)  { $agentArgs += @('-GitHubRepo', $agentGhRepo) }
+            $agentArgs += @('-TimeoutSeconds', '60')
+            & pwsh @agentArgs 2>&1 | Out-Null
+            Assert-Check 'Agent verification passed' ($LASTEXITCODE -eq 0) 'verify-agents.ps1 reported failures — run it standalone for details'
+          } catch {
+            Assert-Check 'Agent verification completed' $false $_.Exception.Message
+          }
+        } else {
+          Assert-Check 'Agent verification' $true '' -WarnOnly
+          Write-Host '    SKIP: Set ADO_ORG_URL / GITHUB_REPO in env config to enable agent checks' -ForegroundColor Yellow
+        }
+      } else {
+        Assert-Check 'verify-agents.ps1 exists' $false 'scripts/validate/verify-agents.ps1 not found'
+      }
     }
   }
 }

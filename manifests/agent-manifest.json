@@ -98,9 +98,14 @@
       "sha256": "b7caf7aea0b37f5ee467f7e3a85a99cd5d2af6e2f28801ec3b601a2654ed99f5"
     },
     {
+      "path": "scripts/validate/verify-agents.ps1",
+      "sizeBytes": 10570,
+      "sha256": "9e8793ca43942ab53d89d952cde28ac84e379fc55d935c1486ad8e82f3f3a271"
+    },
+    {
       "path": "scripts/verify-environment.ps1",
-      "sizeBytes": 9149,
-      "sha256": "f4bda7f9ee67f1c8d7b4289a475160d739667b35ca3b996d6fe95eb129d6aa74"
+      "sizeBytes": 10906,
+      "sha256": "1b6e348cc2f7ce81119466075eda869069fdac9ca46e2e4bdfb4737601a22456"
     }
   ],
   "copilotAgents": [

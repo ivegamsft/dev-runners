@@ -76,6 +76,9 @@ Go to **Settings → Secrets and variables → Variables** and set:
 | `PACKER_TEMP_RG` | `rg-packer-temp` |
 | `PACKER_VM_SIZE` | `Standard_D4s_v5` |
 | `ADMIN_USERNAME` | `azureadmin` |
+| `ADO_ORG_URL` | `https://dev.azure.com/myorg` |
+| `ADO_POOL_NAME` | `Default` |
+| `GITHUB_REPO` | `myorg/dev-runners` |
 
 ### 3. GitHub Repository Secrets
 
@@ -139,6 +142,36 @@ The verify script checks:
 - Manifest is up to date
 - No secrets in tracked files
 - (With Azure) Resource group, Key Vault, Gallery, Identities, VMSS, VM, NSG
+- (With Azure + agent config) ADO agent pool registration, GitHub runner registration
+
+### Agent Verification
+
+After deploying, agents need ~5 minutes to bootstrap. Verify they registered:
+
+```powershell
+# Full agent verification (ADO + GitHub)
+pwsh scripts/validate/verify-agents.ps1 `
+  -SubscriptionId 00000000-... `
+  -ResourceGroup rg-myorg-dev-eus2 `
+  -AdoOrgUrl https://dev.azure.com/myorg `
+  -GitHubRepo myorg/dev-runners
+
+# Auto-load config from env/dev.json
+pwsh scripts/validate/verify-agents.ps1 -SubscriptionId 00000000-...
+
+# Increase timeout if agents are still bootstrapping
+pwsh scripts/validate/verify-agents.ps1 -SubscriptionId 00000000-... -TimeoutSeconds 600
+```
+
+The script checks:
+- Linux VMSS instances register as online agents in the ADO pool
+- Windows VM registers as an online GitHub Actions self-hosted runner
+- Both report correct capabilities (OS, hostname, labels)
+
+Static smoke tests for the verification scripts:
+```powershell
+pwsh tests/agent-smoke-tests.ps1
+```
 
 ## Cleanup
 
@@ -172,3 +205,6 @@ pwsh scripts/cleanup.ps1 `
 | `adminPassword` too short | Workflows generate 24-char passwords; don't set manually |
 | Manifest guard fails | Run `pwsh scripts/manifest/update-agent-manifest.ps1` |
 | PSScriptAnalyzer errors | Run `Invoke-ScriptAnalyzer -Path ./scripts -Recurse` |
+| ADO agents not online | Agents need ~5 min to bootstrap after deploy; re-run `verify-agents.ps1 -TimeoutSeconds 600` |
+| GitHub runner not registering | Check VM is running, registration token is valid, and firewall allows `github.com` |
+| `verify-agents.ps1` skips checks | Set `ADO_ORG_URL` and `GITHUB_REPO` in `env/dev.json` |

@@ -8,5 +8,8 @@
   "GALLERY_NAME": "gal<your-org><environment><caf-region-abbrev><unique-suffix>",
   "PACKER_TEMP_RG": "rg-packer-temp",
   "PACKER_VM_SIZE": "Standard_D4s_v5",
-  "ADMIN_USERNAME": "<vm-admin-username>"
+  "ADMIN_USERNAME": "<vm-admin-username>",
+  "ADO_ORG_URL": "https://dev.azure.com/<your-org>",
+  "ADO_POOL_NAME": "Default",
+  "GITHUB_REPO": "<owner>/<repo>"
 }
