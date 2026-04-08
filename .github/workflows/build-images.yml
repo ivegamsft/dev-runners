@@ -159,14 +159,14 @@ jobs:
 
       - name: Upload CIS Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cis-report-${{ matrix.image }}
           path: cis-report-*.json
           if-no-files-found: ignore
 
       - name: Upload Build Metadata
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: packer-${{ matrix.image }}-metadata
           path: |
@@ -218,7 +218,7 @@ jobs:
             provenance-${{ matrix.image }}.json
 
       - name: Upload Signed Provenance
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: provenance-${{ matrix.image }}
           path: |
@@ -271,7 +271,7 @@ jobs:
           echo "Windows:" >> versions.txt
           az sig image-version list -g $RESOURCE_GROUP --gallery-name $GALLERY_NAME --gallery-image-definition windows-agent --query '[].name' -o tsv >> versions.txt || true
           cat versions.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: gallery-versions
           path: versions.txt
